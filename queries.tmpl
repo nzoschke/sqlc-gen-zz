@@ -40,7 +40,7 @@ func {{.Name}}(tx *sqlite.Conn, in {{.Name}}In) (*{{.Name}}Out, error) {
 	out := {{.Name}}Out{}
   {{- range $number, $col := .Columns}}
   {{- if eq (lower .Type.Name) "blob"}}
-  stmt.ColumnBytes({{$number}}, out.Blob)
+  out.{{camel .Name}} = []byte(stmt.ColumnText({{$number}}))
   {{- else}}
   out.{{camel .Name}} = stmt.Column{{bindtype .Type.Name}}({{$number}})
   {{- end}}
