@@ -40,25 +40,35 @@ func Gen(ctx context.Context, req *plugin.GenerateRequest) (*plugin.GenerateResp
 		"singular": pl.Singular,
 	}
 
-	t, err := template.New("catalog.tmpl").Funcs(funcMap).ParseFS(tmpl, "catalog.tmpl")
+	c, err := template.New("catalog.tmpl").Funcs(funcMap).ParseFS(tmpl, "catalog.tmpl")
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
 
-	var buf bytes.Buffer
-	if err := t.Execute(&buf, req); err != nil {
+	var cbuf bytes.Buffer
+	if err := c.Execute(&cbuf, req); err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	q, err := template.New("queries.tmpl").Funcs(funcMap).ParseFS(tmpl, "queries.tmpl")
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	var qbuf bytes.Buffer
+	if err := q.Execute(&qbuf, req); err != nil {
 		return nil, errors.WithStack(err)
 	}
 
 	return &plugin.GenerateResponse{
 		Files: []*plugin.File{
 			{
-				Contents: buf.Bytes(),
+				Contents: cbuf.Bytes(),
 				Name:     "catalog.go",
 			},
 			{
-				Contents: []byte("package zz"),
-				Name:     "gen.go",
+				Contents: qbuf.Bytes(),
+				Name:     "queries.go",
 			},
 		},
 	}, nil
