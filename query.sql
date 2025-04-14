@@ -7,4 +7,4 @@ RETURNING
   *;
 
 -- name: ContactList :many
-SELECT * FROM contacts;
+SELECT * FROM contacts LIMIT ?;

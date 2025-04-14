@@ -23,7 +23,7 @@ func TestFoo(t *testing.T) {
 	a.NoError(err)
 	defer put()
 
-	out, err := zz.ContactCreate(conn, zz.ContactCreateIn{
+	c1, err := zz.ContactCreate(conn, zz.ContactCreateIn{
 		Blob: []byte("b"),
 		Name: "name",
 	})
@@ -31,8 +31,34 @@ func TestFoo(t *testing.T) {
 
 	a.Equal(&zz.ContactCreateOut{
 		Blob:      []byte("b"),
-		CreatedAt: out.CreatedAt,
+		CreatedAt: c1.CreatedAt,
 		Id:        1,
 		Name:      "name",
-	}, out)
+	}, c1)
+
+	c2, err := zz.ContactCreate(conn, zz.ContactCreateIn{
+		Blob: []byte("b"),
+		Name: "name",
+	})
+	a.NoError(err)
+
+	cs, err := zz.ContactList(conn, zz.ContactListIn{
+		Limit: 10,
+	})
+	a.NoError(err)
+
+	a.Equal(zz.ContactListOut{
+		{
+			Blob:      []byte("b"),
+			CreatedAt: c1.CreatedAt,
+			Id:        1,
+			Name:      "name",
+		},
+		{
+			Blob:      []byte("b"),
+			CreatedAt: c2.CreatedAt,
+			Id:        2,
+			Name:      "name",
+		},
+	}, cs)
 }

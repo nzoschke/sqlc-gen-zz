@@ -15,6 +15,7 @@ type {{.Name}}In struct {
   {{- end}}
 }
 
+{{if eq .Cmd ":one"}}
 type {{.Name}}Out struct {
   {{- range .Columns}}
     {{camel .Name}} {{gotype .Type.Name}} `json:"{{.Name}}"`
@@ -48,4 +49,47 @@ func {{.Name}}(tx *sqlite.Conn, in {{.Name}}In) (*{{.Name}}Out, error) {
 
   return &out, nil
 }
+{{else if eq .Cmd ":many"}}
+type {{.Name}}Out []{{.Name}}Row
+
+type {{.Name}}Row struct {
+  {{- range .Columns}}
+    {{camel .Name}} {{gotype .Type.Name}} `json:"{{.Name}}"`
+  {{- end}}
+}
+
+func {{.Name}}(tx *sqlite.Conn, in {{.Name}}In) ({{.Name}}Out, error) {
+  stmt := tx.Prep(`{{.Text}}`)
+  defer stmt.Reset()
+
+  {{range .Params}}
+	stmt.Bind{{bindtype .Column.Type.Name}}({{.Number}}, in.{{camel .Column.Name}})
+  {{- end}}
+
+	out := {{.Name}}Out{}
+  for {
+    ok, err := stmt.Step()
+    if err != nil {
+      return nil, err
+    }
+    if !ok {
+      break
+    }
+
+    row := {{.Name}}Row{}
+    {{- range $number, $col := .Columns}}
+    {{- if eq (lower .Type.Name) "blob"}}
+    row.{{camel .Name}} = []byte(stmt.ColumnText({{$number}}))
+    {{- else}}
+    row.{{camel .Name}} = stmt.Column{{bindtype .Type.Name}}({{$number}})
+    {{- end}}
+    {{- end}}
+
+    out = append(out, row)
+  }
+
+  return out, nil
+}
+
+{{end}}
 {{end}}
