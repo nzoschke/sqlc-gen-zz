@@ -5,6 +5,7 @@ import (
 	"context"
 	"embed"
 	"log/slog"
+	"strings"
 	"text/template"
 
 	"github.com/iancoleman/strcase"
@@ -20,6 +21,19 @@ func Gen(ctx context.Context, req *plugin.GenerateRequest) (*plugin.GenerateResp
 
 	funcMap := template.FuncMap{
 		"camel": strcase.ToCamel,
+		"gotype": func(dbtype string) string {
+			switch strings.ToLower(dbtype) {
+			case "blob":
+				return "[]byte"
+			case "integer":
+				return "int64"
+			case "real":
+				return "float64"
+			case "text":
+				return "string"
+			}
+			return "any"
+		},
 	}
 
 	t, err := template.New("model.tmpl").Funcs(funcMap).ParseFS(tmpl, "model.tmpl")
