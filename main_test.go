@@ -12,7 +12,7 @@ import (
 //go:embed *.sql
 var SQL embed.FS
 
-func TestFoo(t *testing.T) {
+func TestOneMany(t *testing.T) {
 	ctx := t.Context()
 	a := assert.New(t)
 
@@ -61,4 +61,40 @@ func TestFoo(t *testing.T) {
 			Name:      "name",
 		},
 	}, cs)
+}
+
+func TestJSONB(t *testing.T) {
+	ctx := t.Context()
+	a := assert.New(t)
+
+	db, err := db.New(ctx, SQL, "file::memory:?mode=memory&cache=shared")
+	a.NoError(err)
+
+	conn, put, err := db.Take(ctx)
+	a.NoError(err)
+	defer put()
+
+	c1, err := zz.ContactCreateJSONB(conn, zz.ContactCreateJSONBIn{
+		Blob: []byte("{}"),
+		Name: "name",
+	})
+	a.NoError(err)
+
+	a.Equal(&zz.ContactCreateJSONBOut{
+		Json:      []byte("{}"),
+		Blob:      c1.Blob,
+		CreatedAt: c1.CreatedAt,
+		Id:        3,
+		Name:      "name",
+	}, c1)
+
+	c2, err := zz.ContactReadJSONB(conn, zz.ContactReadJSONBIn{
+		Id: 3,
+	})
+	a.NoError(err)
+
+	a.Equal(&zz.ContactReadJSONBOut{
+		Blob: []byte("{}"),
+	}, c2)
+
 }

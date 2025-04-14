@@ -24,9 +24,9 @@ func Gen(ctx context.Context, req *plugin.GenerateRequest) (*plugin.GenerateResp
 
 	funcMap := template.FuncMap{
 		"camel": strcase.ToCamel,
-		"bindtype": func(dbtype string) string {
+		"dbtype": func(dbtype string) string {
 			switch strings.ToLower(dbtype) {
-			case "blob":
+			case "any", "blob":
 				return "Bytes"
 			case "integer":
 				return "Int64"
@@ -35,11 +35,11 @@ func Gen(ctx context.Context, req *plugin.GenerateRequest) (*plugin.GenerateResp
 			case "text":
 				return "Text"
 			}
-			return "any"
+			return "Bytes"
 		},
 		"gotype": func(dbtype string) string {
 			switch strings.ToLower(dbtype) {
-			case "blob":
+			case "any", "blob":
 				return "[]byte"
 			case "integer":
 				return "int64"
@@ -48,7 +48,7 @@ func Gen(ctx context.Context, req *plugin.GenerateRequest) (*plugin.GenerateResp
 			case "text":
 				return "string"
 			}
-			return "any"
+			return "[]byte"
 		},
 		"lower":    strings.ToLower,
 		"singular": pl.Singular,
