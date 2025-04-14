@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"text/template"
 
+	"github.com/iancoleman/strcase"
 	"github.com/olekukonko/errors"
 	"github.com/sqlc-dev/plugin-sdk-go/plugin"
 )
@@ -17,7 +18,11 @@ var tmpl embed.FS
 func Gen(ctx context.Context, req *plugin.GenerateRequest) (*plugin.GenerateResponse, error) {
 	slog.Info("gen", "req", req)
 
-	t, err := template.ParseFS(tmpl, "model.tmpl")
+	funcMap := template.FuncMap{
+		"camel": strcase.ToCamel,
+	}
+
+	t, err := template.New("model.tmpl").Funcs(funcMap).ParseFS(tmpl, "model.tmpl")
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}

@@ -4,6 +4,7 @@ go 1.24.2
 
 require (
 	github.com/golang/protobuf v1.5.3 // indirect
+	github.com/iancoleman/strcase v0.3.0 // indirect
 	github.com/olekukonko/errors v0.0.0-20250412155929-b194c46f93a1 // indirect
 	github.com/sqlc-dev/plugin-sdk-go v1.23.0 // indirect
 	golang.org/x/net v0.14.0 // indirect

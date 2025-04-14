@@ -2,5 +2,10 @@
 
 package {{.Settings.Codegen.Out}}
 
-type Contacts struct {
+{{range .Catalog.Schemas}}
+{{range .Tables}}
+type {{camel .Rel.Name}} struct {
 }
+{{end}}
+{{end}}
+
