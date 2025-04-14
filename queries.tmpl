@@ -2,6 +2,12 @@
 
 package {{.Settings.Codegen.Out}}
 
+import (
+	"database/sql"
+
+	"zombiezen.com/go/sqlite"
+)
+
 {{range .Queries}}
 type {{.Name}}In struct {
   {{- range .Params}}
@@ -15,7 +21,31 @@ type {{.Name}}Out struct {
   {{- end}}
 }
 
-func {{.Name}}(in {{.Name}}In) (*{{.Name}}Out, error) {
-  return nil, nil
+func {{.Name}}(tx *sqlite.Conn, in {{.Name}}In) (*{{.Name}}Out, error) {
+  stmt := tx.Prep(`{{.Text}}`)
+  defer stmt.Reset()
+
+  {{range .Params}}
+	stmt.Bind{{bindtype .Column.Type.Name}}({{.Number}}, in.{{camel .Column.Name}})
+  {{- end}}
+
+  ok, err := stmt.Step()
+  if err != nil {
+    return nil, err
+  }
+  if !ok {
+    return nil, sql.ErrNoRows
+  }
+
+	out := {{.Name}}Out{}
+  {{- range $number, $col := .Columns}}
+  {{- if eq (lower .Type.Name) "blob"}}
+  stmt.ColumnBytes({{$number}}, out.Blob)
+  {{- else}}
+  out.{{camel .Name}} = stmt.Column{{bindtype .Type.Name}}({{$number}})
+  {{- end}}
+  {{- end}}
+
+  return &out, nil
 }
 {{end}}
