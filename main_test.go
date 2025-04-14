@@ -7,5 +7,5 @@ import (
 )
 
 func TestFoo(t *testing.T) {
-	_ = zz.Contacts{}
+	_ = zz.Contact{}
 }
