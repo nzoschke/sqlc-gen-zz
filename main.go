@@ -7,6 +7,7 @@ import (
 	"io"
 	"os"
 
+	"github.com/nzoschke/sqlc-gen-zz/pkg/gen"
 	"github.com/olekukonko/errors"
 	"github.com/sqlc-dev/plugin-sdk-go/plugin"
 	"google.golang.org/protobuf/proto"
@@ -33,7 +34,7 @@ func run() error {
 		return fmt.Errorf("failed to unmarshal JSON: %w", err)
 	}
 
-	res, err := Gen(ctx, req)
+	res, err := gen.Gen(ctx, req)
 	if err != nil {
 		return errors.WithStack(err)
 	}

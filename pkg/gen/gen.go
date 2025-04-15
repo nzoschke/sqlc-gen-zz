@@ -1,4 +1,4 @@
-package main
+package gen
 
 import (
 	"bytes"
@@ -16,20 +16,6 @@ import (
 )
 
 var pl = pluralize.NewClient()
-
-func gotype(dbtype string) string {
-	switch strings.ToLower(dbtype) {
-	case "any", "blob":
-		return "[]byte"
-	case "integer":
-		return "int64"
-	case "real":
-		return "float64"
-	case "text":
-		return "string"
-	}
-	return "[]byte"
-}
 
 func Gen(ctx context.Context, req *plugin.GenerateRequest) (*plugin.GenerateResponse, error) {
 	slog.Info("gen", "req", req)
@@ -130,4 +116,18 @@ func Gen(ctx context.Context, req *plugin.GenerateRequest) (*plugin.GenerateResp
 			},
 		},
 	}, nil
+}
+
+func gotype(dbtype string) string {
+	switch strings.ToLower(dbtype) {
+	case "any", "blob":
+		return "[]byte"
+	case "integer":
+		return "int64"
+	case "real":
+		return "float64"
+	case "text":
+		return "string"
+	}
+	return "[]byte"
 }
