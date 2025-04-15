@@ -10,16 +10,9 @@ import (
 
 {{range .Queries}}
 {{if eq .Cmd ":exec"}}
-{{template "exec.tmpl" .}}
+	{{template "exec.tmpl" .}}
 {{else if eq .Cmd ":one"}}
-{{if eq (len .Params) 0}}
-{{template "one0.tmpl" .}}
-{{else if eq (len .Params) 1}}
-{{template "one1.tmpl" .}}
-{{else}}
-{{template "one2.tmpl" .}}
-{{end}}
-
+	{{template "one.tmpl" .}}
 {{else if eq .Cmd ":many"}}
 {{if eq (len .Params) 0}}
 {{template "many0.tmpl" .}}
