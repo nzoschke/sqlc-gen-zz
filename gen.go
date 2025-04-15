@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"context"
-	"embed"
 	"fmt"
 	"log/slog"
 	"strings"
@@ -11,12 +10,10 @@ import (
 
 	"github.com/gertd/go-pluralize"
 	"github.com/iancoleman/strcase"
+	"github.com/nzoschke/sqlc-gen-zz/pkg/tmpl"
 	"github.com/olekukonko/errors"
 	"github.com/sqlc-dev/plugin-sdk-go/plugin"
 )
-
-//go:embed *.tmpl
-var tmpl embed.FS
 
 var pl = pluralize.NewClient()
 
@@ -101,7 +98,7 @@ func Gen(ctx context.Context, req *plugin.GenerateRequest) (*plugin.GenerateResp
 		"singular": pl.Singular,
 	}
 
-	c, err := template.New("catalog.tmpl").Funcs(funcMap).ParseFS(tmpl, "*.tmpl")
+	c, err := template.New("catalog.tmpl").Funcs(funcMap).ParseFS(tmpl.Tmpl, "*.tmpl")
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
@@ -111,7 +108,7 @@ func Gen(ctx context.Context, req *plugin.GenerateRequest) (*plugin.GenerateResp
 		return nil, errors.WithStack(err)
 	}
 
-	q, err := template.New("queries.tmpl").Funcs(funcMap).ParseFS(tmpl, "*.tmpl")
+	q, err := template.New("queries.tmpl").Funcs(funcMap).ParseFS(tmpl.Tmpl, "*.tmpl")
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}

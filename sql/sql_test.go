@@ -5,7 +5,7 @@ import (
 
 	"github.com/nzoschke/sqlc-gen-zz/db"
 	"github.com/nzoschke/sqlc-gen-zz/sql"
-	"github.com/nzoschke/sqlc-gen-zz/zz"
+	"github.com/nzoschke/sqlc-gen-zz/sql/c"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -20,49 +20,49 @@ func TestCRUD(t *testing.T) {
 	a.NoError(err)
 	defer put()
 
-	c1, err := zz.ContactCreate(conn, zz.ContactCreateIn{
+	c1, err := c.ContactCreate(conn, c.ContactCreateIn{
 		Blob: []byte("b"),
 		Name: "name",
 	})
 	a.NoError(err)
 
-	a.Equal(&zz.ContactCreateOut{
+	a.Equal(&c.ContactCreateOut{
 		Blob:      []byte("b"),
 		CreatedAt: c1.CreatedAt,
 		Id:        1,
 		Name:      "name",
 	}, c1)
 
-	n, err := zz.ContactCount(conn)
+	n, err := c.ContactCount(conn)
 	a.NoError(err)
 	a.Equal(int64(1), n)
 
-	err = zz.ContactUpdate(conn, zz.ContactUpdateIn{
+	err = c.ContactUpdate(conn, c.ContactUpdateIn{
 		Id:   1,
 		Name: "new",
 	})
 	a.NoError(err)
 
-	c, err := zz.ContactRead(conn, 1)
+	cr, err := c.ContactRead(conn, 1)
 	a.NoError(err)
 
-	a.Equal(&zz.ContactReadOut{
+	a.Equal(&c.ContactReadOut{
 		Blob:      []byte("b"),
-		CreatedAt: c.CreatedAt,
+		CreatedAt: cr.CreatedAt,
 		Id:        1,
 		Name:      "new",
-	}, c)
+	}, cr)
 
-	c2, err := zz.ContactCreate(conn, zz.ContactCreateIn{
+	c2, err := c.ContactCreate(conn, c.ContactCreateIn{
 		Blob: []byte("b"),
 		Name: "name",
 	})
 	a.NoError(err)
 
-	cs, err := zz.ContactList(conn, 10)
+	cs, err := c.ContactList(conn, 10)
 	a.NoError(err)
 
-	a.Equal(zz.ContactListOut{
+	a.Equal(c.ContactListOut{
 		{
 			Blob:      []byte("b"),
 			CreatedAt: c1.CreatedAt,
@@ -77,21 +77,21 @@ func TestCRUD(t *testing.T) {
 		},
 	}, cs)
 
-	ns, err := zz.ContactListNames(conn, 10)
+	ns, err := c.ContactListNames(conn, 10)
 	a.NoError(err)
 
 	a.Equal([]string{"new", "name"}, ns)
 
-	err = zz.ContactDelete(conn, 1)
+	err = c.ContactDelete(conn, 1)
 	a.NoError(err)
 
-	err = zz.ContactDelete(conn, 2)
+	err = c.ContactDelete(conn, 2)
 	a.NoError(err)
 
-	cs, err = zz.ContactList(conn, 10)
+	cs, err = c.ContactList(conn, 10)
 	a.NoError(err)
 
-	a.Equal(zz.ContactListOut{}, cs)
+	a.Equal(c.ContactListOut{}, cs)
 }
 
 func TestJSONB(t *testing.T) {
@@ -105,13 +105,13 @@ func TestJSONB(t *testing.T) {
 	a.NoError(err)
 	defer put()
 
-	c1, err := zz.ContactCreateJSONB(conn, zz.ContactCreateJSONBIn{
+	c1, err := c.ContactCreateJSONB(conn, c.ContactCreateJSONBIn{
 		Blob: []byte("{}"),
 		Name: "name",
 	})
 	a.NoError(err)
 
-	a.Equal(&zz.ContactCreateJSONBOut{
+	a.Equal(&c.ContactCreateJSONBOut{
 		Json:      []byte("{}"),
 		Blob:      c1.Blob,
 		CreatedAt: c1.CreatedAt,
@@ -119,11 +119,11 @@ func TestJSONB(t *testing.T) {
 		Name:      "name",
 	}, c1)
 
-	c2, err := zz.ContactReadJSONB(conn, 1)
+	c2, err := c.ContactReadJSONB(conn, 1)
 	a.NoError(err)
 
 	a.Equal([]byte("{}"), c2)
 
-	err = zz.ContactDeleteAll(conn)
+	err = c.ContactDeleteAll(conn)
 	a.NoError(err)
 }
