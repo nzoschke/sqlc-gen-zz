@@ -6,6 +6,9 @@ VALUES
 RETURNING
   *;
 
+-- name: ContactRead :one
+SELECT * FROM contacts WHERE id = ? LIMIT 1;
+
 -- name: ContactList :many
 SELECT
   *
@@ -27,6 +30,10 @@ DELETE FROM
   contacts
 WHERE
   id = ?;
+
+-- name: ContactDeleteAll :exec
+DELETE FROM
+  contacts;
 
 -- name: ContactCreateJSONB :one
 INSERT INTO

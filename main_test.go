@@ -12,7 +12,7 @@ import (
 //go:embed *.sql
 var SQL embed.FS
 
-func TestOneMany(t *testing.T) {
+func TestCRUD(t *testing.T) {
 	ctx := t.Context()
 	a := assert.New(t)
 
@@ -36,6 +36,24 @@ func TestOneMany(t *testing.T) {
 		Name:      "name",
 	}, c1)
 
+	err = zz.ContactUpdate(conn, zz.ContactUpdateIn{
+		Id:   1,
+		Name: "new",
+	})
+	a.NoError(err)
+
+	c, err := zz.ContactRead(conn, zz.ContactReadIn{
+		Id: 1,
+	})
+	a.NoError(err)
+
+	a.Equal(&zz.ContactReadOut{
+		Blob:      []byte("b"),
+		CreatedAt: c.CreatedAt,
+		Id:        1,
+		Name:      "new",
+	}, c)
+
 	c2, err := zz.ContactCreate(conn, zz.ContactCreateIn{
 		Blob: []byte("b"),
 		Name: "name",
@@ -52,7 +70,7 @@ func TestOneMany(t *testing.T) {
 			Blob:      []byte("b"),
 			CreatedAt: c1.CreatedAt,
 			Id:        1,
-			Name:      "name",
+			Name:      "new",
 		},
 		{
 			Blob:      []byte("b"),
@@ -61,6 +79,23 @@ func TestOneMany(t *testing.T) {
 			Name:      "name",
 		},
 	}, cs)
+
+	err = zz.ContactDelete(conn, zz.ContactDeleteIn{
+		Id: 1,
+	})
+	a.NoError(err)
+
+	err = zz.ContactDelete(conn, zz.ContactDeleteIn{
+		Id: 2,
+	})
+	a.NoError(err)
+
+	cs, err = zz.ContactList(conn, zz.ContactListIn{
+		Limit: 10,
+	})
+	a.NoError(err)
+
+	a.Equal(zz.ContactListOut{}, cs)
 }
 
 func TestJSONB(t *testing.T) {
@@ -84,12 +119,12 @@ func TestJSONB(t *testing.T) {
 		Json:      []byte("{}"),
 		Blob:      c1.Blob,
 		CreatedAt: c1.CreatedAt,
-		Id:        3,
+		Id:        1,
 		Name:      "name",
 	}, c1)
 
 	c2, err := zz.ContactReadJSONB(conn, zz.ContactReadJSONBIn{
-		Id: 3,
+		Id: 1,
 	})
 	a.NoError(err)
 
@@ -97,4 +132,6 @@ func TestJSONB(t *testing.T) {
 		Blob: []byte("{}"),
 	}, c2)
 
+	err = zz.ContactDeleteAll(conn, zz.ContactDeleteAllIn{})
+	a.NoError(err)
 }
