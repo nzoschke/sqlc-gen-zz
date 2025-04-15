@@ -20,6 +20,14 @@ FROM
 LIMIT
   ?;
 
+-- name: ContactListNames :many
+SELECT
+  name
+FROM
+  contacts
+LIMIT
+  ?;
+
 -- name: ContactUpdate :exec
 UPDATE
   contacts

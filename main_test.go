@@ -80,6 +80,11 @@ func TestCRUD(t *testing.T) {
 		},
 	}, cs)
 
+	ns, err := zz.ContactListNames(conn, 10)
+	a.NoError(err)
+
+	a.Equal([]string{"new", "name"}, ns)
+
 	err = zz.ContactDelete(conn, 1)
 	a.NoError(err)
 
