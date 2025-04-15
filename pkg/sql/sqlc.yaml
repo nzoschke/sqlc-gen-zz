@@ -1,0 +1,14 @@
+version: "2"
+
+plugins:
+  - name: zz
+    process:
+      cmd: sqlc-gen-zz
+
+sql:
+  - engine: "sqlite"
+    queries: "query.sql"
+    schema: "schema.sql"
+    codegen:
+      - out: c
+        plugin: zz
