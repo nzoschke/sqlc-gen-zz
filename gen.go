@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"embed"
+	"fmt"
 	"log/slog"
 	"strings"
 	"text/template"
@@ -19,10 +20,37 @@ var tmpl embed.FS
 
 var pl = pluralize.NewClient()
 
+func gotype(dbtype string) string {
+	switch strings.ToLower(dbtype) {
+	case "any", "blob":
+		return "[]byte"
+	case "integer":
+		return "int64"
+	case "real":
+		return "float64"
+	case "text":
+		return "string"
+	}
+	return "[]byte"
+}
+
 func Gen(ctx context.Context, req *plugin.GenerateRequest) (*plugin.GenerateResponse, error) {
 	slog.Info("gen", "req", req)
 
 	funcMap := template.FuncMap{
+		"inarg": func(name string, ps []*plugin.Parameter) string {
+			switch len(ps) {
+			case 0:
+				return ""
+			case 1:
+				// id int
+				p := ps[0]
+				return fmt.Sprintf(", %s %s", p.Column.Name, gotype(p.Column.Type.Name))
+			default:
+				// ContactCreateIn
+				return fmt.Sprintf(", in %sIn", name)
+			}
+		},
 		"camel": strcase.ToCamel,
 		"dbtype": func(dbtype string) string {
 			switch strings.ToLower(dbtype) {
@@ -37,19 +65,7 @@ func Gen(ctx context.Context, req *plugin.GenerateRequest) (*plugin.GenerateResp
 			}
 			return "Bytes"
 		},
-		"gotype": func(dbtype string) string {
-			switch strings.ToLower(dbtype) {
-			case "any", "blob":
-				return "[]byte"
-			case "integer":
-				return "int64"
-			case "real":
-				return "float64"
-			case "text":
-				return "string"
-			}
-			return "[]byte"
-		},
+		"gotype":   gotype,
 		"lower":    strings.ToLower,
 		"singular": pl.Singular,
 	}

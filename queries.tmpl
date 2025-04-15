@@ -10,14 +10,7 @@ import (
 
 {{range .Queries}}
 {{if eq .Cmd ":exec"}}
-{{if eq (len .Params) 0}}
-{{template "exec0.tmpl" .}}
-{{else if eq (len .Params) 1}}
-{{template "exec1.tmpl" .}}
-{{else}}
-{{template "exec2.tmpl" .}}
-{{end}}
-
+{{template "exec.tmpl" .}}
 {{else if eq .Cmd ":one"}}
 {{if eq (len .Params) 0}}
 {{template "one0.tmpl" .}}
