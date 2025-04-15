@@ -2,6 +2,10 @@
 
 package {{.Settings.Codegen.Out}}
 
+import (
+	"time"
+)
+
 {{range .Catalog.Schemas}}
   {{range .Tables}}
 type {{singular (camel .Rel.Name)}} struct {

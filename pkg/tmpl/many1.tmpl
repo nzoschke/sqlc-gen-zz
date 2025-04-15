@@ -33,6 +33,8 @@ func {{.Name}}(tx *sqlite.Conn {{inarg .Name .Params }}) ([]{{gotype $c.Type.Nam
 
     {{if eq (lower $c.Type.Name) "blob"}}
     c := []byte(stmt.ColumnText(0))
+    {{else if eq (lower $c.Type.Name) "datetime"}}
+    c, _ = time.Parse("2006-01-02 15:04:05", stmt.ColumnText(0))
     {{ else }}
     c := stmt.Column{{dbtype $c.Type.Name}}(0)
     {{end}}

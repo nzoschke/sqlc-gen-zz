@@ -30,7 +30,7 @@ func Gen(ctx context.Context, req *plugin.GenerateRequest) (*plugin.GenerateResp
 				return "Int64"
 			case "real":
 				return "Float"
-			case "text":
+			case "datetime", "text":
 				return "Text"
 			}
 			return "Bytes"
@@ -125,6 +125,8 @@ func gotype(dbtype string) string {
 	switch strings.ToLower(dbtype) {
 	case "any", "blob":
 		return "[]byte"
+	case "datetime":
+		return "time.Time"
 	case "integer":
 		return "int64"
 	case "real":

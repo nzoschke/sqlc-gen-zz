@@ -45,6 +45,8 @@ func {{.Name}}(tx *sqlite.Conn {{inarg .Name .Params }}) ({{outarg .Name .Column
   {{- range $number, $col := .Columns}}
   {{if eq (gotype .Type.Name) "[]byte"}}
   out.{{camel .Name}} = []byte(stmt.ColumnText({{$number}}))
+  {{else if eq (gotype .Type.Name) "time.Time"}}
+  out.{{camel .Name}}, _ = time.Parse("2006-01-02 15:04:05", stmt.ColumnText({{$number}}))
   {{else}}
   out.{{camel .Name}} = stmt.Column{{dbtype .Type.Name}}({{$number}})
   {{end}}

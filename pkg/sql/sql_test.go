@@ -2,6 +2,7 @@ package sql_test
 
 import (
 	"testing"
+	"time"
 
 	"github.com/nzoschke/sqlc-gen-zz/pkg/db"
 	"github.com/nzoschke/sqlc-gen-zz/pkg/sql/c"
@@ -31,6 +32,8 @@ func TestCRUD(t *testing.T) {
 		Id:        1,
 		Name:      "name",
 	}, c1)
+
+	a.Equal(time.Now().Format("2006-01-02"), c1.CreatedAt.Format("2006-01-02"))
 
 	n, err := c.ContactCount(conn)
 	a.NoError(err)

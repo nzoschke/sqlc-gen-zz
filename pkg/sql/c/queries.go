@@ -4,6 +4,7 @@ package c
 
 import (
 	"database/sql"
+	"time"
 
 	"zombiezen.com/go/sqlite"
 )
@@ -14,10 +15,10 @@ type ContactCreateIn struct {
 }
 
 type ContactCreateOut struct {
-	Blob      []byte  `json:"blob"`
-	CreatedAt float64 `json:"created_at"`
-	Id        int64   `json:"id"`
-	Name      string  `json:"name"`
+	Blob      []byte    `json:"blob"`
+	CreatedAt time.Time `json:"created_at"`
+	Id        int64     `json:"id"`
+	Name      string    `json:"name"`
 }
 
 func ContactCreate(tx *sqlite.Conn, in ContactCreateIn) (*ContactCreateOut, error) {
@@ -44,7 +45,7 @@ RETURNING
 
 	out.Blob = []byte(stmt.ColumnText(0))
 
-	out.CreatedAt = stmt.ColumnFloat(1)
+	out.CreatedAt, _ = time.Parse("2006-01-02 15:04:05", stmt.ColumnText(1))
 
 	out.Id = stmt.ColumnInt64(2)
 
@@ -55,10 +56,10 @@ RETURNING
 }
 
 type ContactReadOut struct {
-	Blob      []byte  `json:"blob"`
-	CreatedAt float64 `json:"created_at"`
-	Id        int64   `json:"id"`
-	Name      string  `json:"name"`
+	Blob      []byte    `json:"blob"`
+	CreatedAt time.Time `json:"created_at"`
+	Id        int64     `json:"id"`
+	Name      string    `json:"name"`
 }
 
 func ContactRead(tx *sqlite.Conn, id int64) (*ContactReadOut, error) {
@@ -79,7 +80,7 @@ func ContactRead(tx *sqlite.Conn, id int64) (*ContactReadOut, error) {
 
 	out.Blob = []byte(stmt.ColumnText(0))
 
-	out.CreatedAt = stmt.ColumnFloat(1)
+	out.CreatedAt, _ = time.Parse("2006-01-02 15:04:05", stmt.ColumnText(1))
 
 	out.Id = stmt.ColumnInt64(2)
 
@@ -112,10 +113,10 @@ func ContactCount(tx *sqlite.Conn) (int64, error) {
 type ContactListOut []ContactListRow
 
 type ContactListRow struct {
-	Blob      []byte  `json:"blob"`
-	CreatedAt float64 `json:"created_at"`
-	Id        int64   `json:"id"`
-	Name      string  `json:"name"`
+	Blob      []byte    `json:"blob"`
+	CreatedAt time.Time `json:"created_at"`
+	Id        int64     `json:"id"`
+	Name      string    `json:"name"`
 }
 
 func ContactList(tx *sqlite.Conn, limit int64) (ContactListOut, error) {
@@ -143,7 +144,7 @@ LIMIT
 
 		row.Blob = []byte(stmt.ColumnText(0))
 
-		row.CreatedAt = stmt.ColumnFloat(1)
+		row.CreatedAt, _ = time.Parse("2006-01-02 15:04:05", stmt.ColumnText(1))
 
 		row.Id = stmt.ColumnInt64(2)
 
@@ -245,11 +246,11 @@ type ContactCreateJSONBIn struct {
 }
 
 type ContactCreateJSONBOut struct {
-	Json      []byte  `json:"json"`
-	Blob      []byte  `json:"blob"`
-	CreatedAt float64 `json:"created_at"`
-	Id        int64   `json:"id"`
-	Name      string  `json:"name"`
+	Json      []byte    `json:"json"`
+	Blob      []byte    `json:"blob"`
+	CreatedAt time.Time `json:"created_at"`
+	Id        int64     `json:"id"`
+	Name      string    `json:"name"`
 }
 
 func ContactCreateJSONB(tx *sqlite.Conn, in ContactCreateJSONBIn) (*ContactCreateJSONBOut, error) {
@@ -279,7 +280,7 @@ RETURNING
 
 	out.Blob = []byte(stmt.ColumnText(1))
 
-	out.CreatedAt = stmt.ColumnFloat(2)
+	out.CreatedAt, _ = time.Parse("2006-01-02 15:04:05", stmt.ColumnText(2))
 
 	out.Id = stmt.ColumnInt64(3)
 
