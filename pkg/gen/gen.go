@@ -82,6 +82,18 @@ func Gen(ctx context.Context, req *plugin.GenerateRequest) (*plugin.GenerateResp
 		},
 		"lower":    strings.ToLower,
 		"singular": pl.Singular,
+		"timeimport": func(c *plugin.Catalog) string {
+			for _, s := range c.Schemas {
+				for _, t := range s.Tables {
+					for _, c := range t.Columns {
+						if gotype(c.Type.Name) == "time.Time" {
+							return `"time"`
+						}
+					}
+				}
+			}
+			return ""
+		},
 	}
 
 	res := &plugin.GenerateResponse{

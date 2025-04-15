@@ -3,7 +3,7 @@
 package {{.Settings.Codegen.Out}}
 
 import (
-	"time"
+	{{timeimport .Catalog}}
 )
 
 {{range .Catalog.Schemas}}
