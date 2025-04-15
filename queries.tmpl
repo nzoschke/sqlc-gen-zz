@@ -9,17 +9,11 @@ import (
 )
 
 {{range .Queries}}
-{{if eq .Cmd ":exec"}}
-	{{template "exec.tmpl" .}}
-{{else if eq .Cmd ":one"}}
-	{{template "one.tmpl" .}}
-{{else if eq .Cmd ":many"}}
-{{if eq (len .Params) 0}}
-{{template "many0.tmpl" .}}
-{{else if eq (len .Params) 1}}
-{{template "many1.tmpl" .}}
-{{else}}
-{{template "many2.tmpl" .}}
-{{end}}
-{{end}}
+	{{if eq .Cmd ":exec"}}
+		{{template "exec.tmpl" .}}
+	{{else if eq .Cmd ":one"}}
+		{{template "one.tmpl" .}}
+	{{else if eq .Cmd ":many"}}
+		{{template "many.tmpl" .}}
+	{{end}}
 {{end}}
