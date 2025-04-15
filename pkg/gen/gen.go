@@ -24,16 +24,15 @@ func Gen(ctx context.Context, req *plugin.GenerateRequest) (*plugin.GenerateResp
 		"camel": strcase.ToCamel,
 		"dbtype": func(dbtype string) string {
 			switch strings.ToLower(dbtype) {
-			case "any", "blob":
-				return "Bytes"
 			case "integer":
 				return "Int64"
 			case "real":
 				return "Float"
 			case "datetime", "text":
 				return "Text"
+			default:
+				return "Bytes"
 			}
-			return "Bytes"
 		},
 		"gotype": gotype,
 		"inarg": func(name string, ps []*plugin.Parameter) string {
@@ -43,7 +42,7 @@ func Gen(ctx context.Context, req *plugin.GenerateRequest) (*plugin.GenerateResp
 			case 1:
 				// id int
 				p := ps[0]
-				return fmt.Sprintf(", %s %s", p.Column.Name, gotype(p.Column.Type.Name))
+				return fmt.Sprintf(", %s %s", p.Column.Name, gotype(p.Column))
 			default:
 				// ContactCreateIn
 				return fmt.Sprintf(", in %sIn", name)
@@ -56,7 +55,7 @@ func Gen(ctx context.Context, req *plugin.GenerateRequest) (*plugin.GenerateResp
 			case 1:
 				// int
 				c := cs[0]
-				return fmt.Sprintf("%s, ", gotype(c.Type.Name))
+				return fmt.Sprintf("%s, ", gotype(c))
 			default:
 				// *ContactCreateOut
 				return fmt.Sprintf("*%sOut, ", name)
@@ -68,7 +67,7 @@ func Gen(ctx context.Context, req *plugin.GenerateRequest) (*plugin.GenerateResp
 				return ""
 			case 1:
 				c := cs[0]
-				switch gotype(c.Type.Name) {
+				switch gotype(c) {
 				case "[]byte":
 					return "nil"
 				case "text":
@@ -86,7 +85,7 @@ func Gen(ctx context.Context, req *plugin.GenerateRequest) (*plugin.GenerateResp
 			for _, s := range c.Schemas {
 				for _, t := range s.Tables {
 					for _, c := range t.Columns {
-						if gotype(c.Type.Name) == "time.Time" {
+						if gotype(c) == "time.Time" {
 							return `"time"`
 						}
 					}
@@ -133,18 +132,20 @@ func Gen(ctx context.Context, req *plugin.GenerateRequest) (*plugin.GenerateResp
 	return res, nil
 }
 
-func gotype(dbtype string) string {
-	switch strings.ToLower(dbtype) {
-	case "any", "blob":
-		return "[]byte"
-	case "datetime":
+func gotype(c *plugin.Column) string {
+	if strings.HasSuffix(c.Name, "_at") {
 		return "time.Time"
+	}
+
+	// https://sqlite.org/datatype3.html#affinity_name_examples
+	switch strings.ToLower(c.Type.Name) {
 	case "integer":
 		return "int64"
 	case "real":
 		return "float64"
 	case "text":
 		return "string"
+	default:
+		return "[]byte"
 	}
-	return "[]byte"
 }

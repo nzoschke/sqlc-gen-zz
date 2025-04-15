@@ -1,7 +1,7 @@
 {{if gt (len .Params) 1}}
 type {{.Name}}In struct {
   {{- range .Params}}
-    {{camel .Column.Name}} {{gotype .Column.Type.Name}} `json:"{{.Column.Name}}"`
+    {{camel .Column.Name}} {{gotype .Column}} `json:"{{.Column.Name}}"`
   {{- end}}
 }
 {{end}}

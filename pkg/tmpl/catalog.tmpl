@@ -10,7 +10,7 @@ import (
   {{range .Tables}}
 type {{singular (camel .Rel.Name)}} struct {
   {{- range .Columns}}
-    {{camel .Name}} {{gotype .Type.Name}} `json:"{{.Name}}"`
+    {{camel .Name}} {{gotype .}} `json:"{{.Name}}"`
   {{- end}}
 }
   {{end}}

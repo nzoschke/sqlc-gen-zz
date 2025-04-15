@@ -1,7 +1,7 @@
 {{if gt (len .Params) 1}}
 type {{.Name}}In struct {
   {{- range .Params}}
-    {{camel .Column.Name}} {{gotype .Column.Type.Name}} `json:"{{.Column.Name}}"`
+    {{camel .Column.Name}} {{gotype .Column}} `json:"{{.Column.Name}}"`
   {{- end}}
 }
 {{end}}
@@ -10,7 +10,7 @@ type {{.Name}}Out []{{.Name}}Row
 
 type {{.Name}}Row struct {
   {{- range .Columns}}
-    {{camel .Name}} {{gotype .Type.Name}} `json:"{{.Name}}"`
+    {{camel .Name}} {{gotype .}} `json:"{{.Name}}"`
   {{- end}}
 }
 
@@ -39,9 +39,9 @@ func {{.Name}}(tx *sqlite.Conn {{inarg .Name .Params }}) ({{.Name}}Out, error) {
 
     row := {{.Name}}Row{}
     {{- range $number, $col := .Columns}}
-    {{if eq (lower .Type.Name) "blob"}}
+    {{if eq (gotype .) "[]byte"}}
     row.{{camel .Name}} = []byte(stmt.ColumnText({{$number}}))
-    {{else if eq (lower .Type.Name) "datetime"}}
+    {{else if eq (gotype .) "time.Time"}}
     row.{{camel .Name}}, _ = time.Parse("2006-01-02 15:04:05", stmt.ColumnText({{$number}}))
     {{else}}
     row.{{camel .Name}} = stmt.Column{{dbtype .Type.Name}}({{$number}})

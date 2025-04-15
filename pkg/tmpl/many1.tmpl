@@ -1,14 +1,14 @@
 {{if gt (len .Params) 1}}
 type {{.Name}}In struct {
   {{- range .Params}}
-    {{camel .Column.Name}} {{gotype .Column.Type.Name}} `json:"{{.Column.Name}}"`
+    {{camel .Column.Name}} {{gotype .Column}} `json:"{{.Column.Name}}"`
   {{- end}}
 }
 {{end}}
 
 {{ $c := index .Columns 0 }}
 
-func {{.Name}}(tx *sqlite.Conn {{inarg .Name .Params }}) ([]{{gotype $c.Type.Name}}, error) {
+func {{.Name}}(tx *sqlite.Conn {{inarg .Name .Params }}) ([]{{gotype $c}}, error) {
   stmt := tx.Prep(`{{.Text}}`)
   defer stmt.Reset()
 
@@ -21,7 +21,7 @@ func {{.Name}}(tx *sqlite.Conn {{inarg .Name .Params }}) ([]{{gotype $c.Type.Nam
     {{- end}}
   {{end}}
 
-	out := []{{gotype $c.Type.Name}}{}
+	out := []{{gotype $c}}{}
   for {
     ok, err := stmt.Step()
     if err != nil {

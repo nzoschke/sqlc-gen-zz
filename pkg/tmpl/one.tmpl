@@ -1,14 +1,14 @@
 {{if gt (len .Params) 1}}
 type {{.Name}}In struct {
   {{- range .Params}}
-    {{camel .Column.Name}} {{gotype .Column.Type.Name}} `json:"{{.Column.Name}}"`
+    {{camel .Column.Name}} {{gotype .Column}} `json:"{{.Column.Name}}"`
   {{- end}}
 }
 {{end}}
 
 type {{.Name}}Out struct {
   {{- range .Columns}}
-    {{camel .Name}} {{gotype .Type.Name}} `json:"{{.Name}}"`
+    {{camel .Name}} {{gotype .}} `json:"{{.Name}}"`
   {{- end}}
 }
 
@@ -35,7 +35,7 @@ func {{.Name}}(tx *sqlite.Conn {{inarg .Name .Params }}) ({{outarg .Name .Column
 
   {{if eq (len .Columns) 1}}
     {{$c := index .Columns 0 }}
-    {{if eq (gotype $c.Type.Name) "[]byte" -}}
+    {{if eq (gotype $c) "[]byte" -}}
   return []byte(stmt.ColumnText(0)), nil
     {{else}}
   return stmt.Column{{dbtype $c.Type.Name}}(0), nil
@@ -43,9 +43,9 @@ func {{.Name}}(tx *sqlite.Conn {{inarg .Name .Params }}) ({{outarg .Name .Column
   {{else}}
 	out := {{.Name}}Out{}
   {{- range $number, $col := .Columns}}
-  {{if eq (gotype .Type.Name) "[]byte"}}
+  {{if eq (gotype .) "[]byte"}}
   out.{{camel .Name}} = []byte(stmt.ColumnText({{$number}}))
-  {{else if eq (gotype .Type.Name) "time.Time"}}
+  {{else if eq (gotype .) "time.Time"}}
   out.{{camel .Name}}, _ = time.Parse("2006-01-02 15:04:05", stmt.ColumnText({{$number}}))
   {{else}}
   out.{{camel .Name}} = stmt.Column{{dbtype .Type.Name}}({{$number}})
