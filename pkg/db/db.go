@@ -3,7 +3,6 @@ package db
 import (
 	"context"
 	"fmt"
-	"io/fs"
 
 	"github.com/olekukonko/errors"
 	"zombiezen.com/go/sqlite"
@@ -15,7 +14,7 @@ type DB struct {
 	pool *sqlitex.Pool
 }
 
-func New(ctx context.Context, fsys fs.FS, path string) (DB, error) {
+func New(ctx context.Context, path string) (DB, error) {
 	pool, err := sqlitex.NewPool(path, sqlitex.PoolOptions{
 		PrepareConn: func(conn *sqlite.Conn) error {
 			return sqlitex.ExecuteTransient(conn, "PRAGMA foreign_keys = ON;", nil)
@@ -30,7 +29,7 @@ func New(ctx context.Context, fsys fs.FS, path string) (DB, error) {
 		pool: pool,
 	}
 
-	if err := db.migrate(ctx, fsys); err != nil {
+	if err := db.migrate(ctx); err != nil {
 		return DB{}, errors.WithStack(err)
 	}
 

@@ -4,12 +4,13 @@ import (
 	"context"
 	"io/fs"
 
+	"github.com/nzoschke/sqlc-gen-zz/pkg/sql"
 	"github.com/olekukonko/errors"
 	"zombiezen.com/go/sqlite/sqlitemigration"
 )
 
-func (d *DB) migrate(ctx context.Context, fsys fs.FS) error {
-	bs, err := fs.ReadFile(fsys, "schema.sql")
+func (d *DB) migrate(ctx context.Context) error {
+	bs, err := fs.ReadFile(sql.SQL, "schema.sql")
 	if err != nil {
 		return errors.WithStack(err)
 	}

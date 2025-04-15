@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/nzoschke/sqlc-gen-zz/pkg/db"
-	"github.com/nzoschke/sqlc-gen-zz/pkg/sql"
 	"github.com/nzoschke/sqlc-gen-zz/pkg/sql/c"
 	"github.com/stretchr/testify/assert"
 )
@@ -13,7 +12,7 @@ func TestCRUD(t *testing.T) {
 	ctx := t.Context()
 	a := assert.New(t)
 
-	db, err := db.New(ctx, sql.SQL, "file::memory:?mode=memory&cache=shared")
+	db, err := db.New(ctx, "file::memory:?mode=memory&cache=shared")
 	a.NoError(err)
 
 	conn, put, err := db.Take(ctx)
@@ -98,7 +97,7 @@ func TestJSONB(t *testing.T) {
 	ctx := t.Context()
 	a := assert.New(t)
 
-	db, err := db.New(ctx, sql.SQL, "file::memory:?mode=memory&cache=shared")
+	db, err := db.New(ctx, "file::memory:?mode=memory&cache=shared")
 	a.NoError(err)
 
 	conn, put, err := db.Take(ctx)
