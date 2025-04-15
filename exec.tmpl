@@ -1,0 +1,15 @@
+func {{.Name}}(tx *sqlite.Conn, in {{.Name}}In) (error) {
+  stmt := tx.Prep(`{{.Text}}`)
+  defer stmt.Reset()
+
+  {{range .Params}}
+	stmt.Bind{{dbtype .Column.Type.Name}}({{.Number}}, in.{{camel .Column.Name}})
+  {{- end}}
+
+  _, err := stmt.Step()
+  if err != nil {
+    return err
+  }
+
+  return nil
+} 

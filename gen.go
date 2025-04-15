@@ -64,7 +64,7 @@ func Gen(ctx context.Context, req *plugin.GenerateRequest) (*plugin.GenerateResp
 		return nil, errors.WithStack(err)
 	}
 
-	q, err := template.New("queries.tmpl").Funcs(funcMap).ParseFS(tmpl, "queries.tmpl")
+	q, err := template.New("queries.tmpl").Funcs(funcMap).ParseFS(tmpl, "exec.tmpl", "queries.tmpl")
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
