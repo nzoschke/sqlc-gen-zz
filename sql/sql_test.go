@@ -3,7 +3,7 @@ package sql_test
 import (
 	"testing"
 
-	"github.com/nzoschke/sqlc-gen-zz/db"
+	"github.com/nzoschke/sqlc-gen-zz/pkg/db"
 	"github.com/nzoschke/sqlc-gen-zz/sql"
 	"github.com/nzoschke/sqlc-gen-zz/sql/c"
 	"github.com/stretchr/testify/assert"
