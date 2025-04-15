@@ -1,3 +1,9 @@
+type {{.Name}}In struct {
+  {{- range .Params}}
+    {{camel .Column.Name}} {{gotype .Column.Type.Name}} `json:"{{.Column.Name}}"`
+  {{- end}}
+}
+
 func {{.Name}}(tx *sqlite.Conn, in {{.Name}}In) (error) {
   stmt := tx.Prep(`{{.Text}}`)
   defer stmt.Reset()

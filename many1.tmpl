@@ -1,0 +1,39 @@
+type {{.Name}}Out []{{.Name}}Row
+
+type {{.Name}}Row struct {
+  {{- range .Columns}}
+    {{camel .Name}} {{gotype .Type.Name}} `json:"{{.Name}}"`
+  {{- end}}
+}
+
+{{ $p := index .Params 0 }}
+func {{.Name}}(tx *sqlite.Conn, {{$p.Column.Name}} {{gotype $p.Column.Type.Name}}) ({{.Name}}Out, error) {
+  stmt := tx.Prep(`{{.Text}}`)
+  defer stmt.Reset()
+
+	stmt.Bind{{dbtype $p.Column.Type.Name}}(1, {{$p.Column.Name}})
+
+	out := {{.Name}}Out{}
+  for {
+    ok, err := stmt.Step()
+    if err != nil {
+      return nil, err
+    }
+    if !ok {
+      break
+    }
+
+    row := {{.Name}}Row{}
+    {{- range $number, $col := .Columns}}
+    {{- if eq (lower .Type.Name) "blob"}}
+    row.{{camel .Name}} = []byte(stmt.ColumnText({{$number}}))
+    {{- else}}
+    row.{{camel .Name}} = stmt.Column{{dbtype .Type.Name}}({{$number}})
+    {{- end}}
+    {{- end}}
+
+    out = append(out, row)
+  }
+
+  return out, nil
+}

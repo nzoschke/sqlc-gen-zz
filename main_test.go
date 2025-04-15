@@ -58,9 +58,7 @@ func TestCRUD(t *testing.T) {
 	})
 	a.NoError(err)
 
-	cs, err := zz.ContactList(conn, zz.ContactListIn{
-		Limit: 10,
-	})
+	cs, err := zz.ContactList(conn, 10)
 	a.NoError(err)
 
 	a.Equal(zz.ContactListOut{
@@ -84,9 +82,7 @@ func TestCRUD(t *testing.T) {
 	err = zz.ContactDelete(conn, 2)
 	a.NoError(err)
 
-	cs, err = zz.ContactList(conn, zz.ContactListIn{
-		Limit: 10,
-	})
+	cs, err = zz.ContactList(conn, 10)
 	a.NoError(err)
 
 	a.Equal(zz.ContactListOut{}, cs)
