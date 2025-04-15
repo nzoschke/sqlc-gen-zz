@@ -51,6 +51,37 @@ func Gen(ctx context.Context, req *plugin.GenerateRequest) (*plugin.GenerateResp
 				return fmt.Sprintf(", in %sIn", name)
 			}
 		},
+		"outarg": func(name string, cs []*plugin.Column) string {
+			switch len(cs) {
+			case 0:
+				return ""
+			case 1:
+				// int
+				c := cs[0]
+				return fmt.Sprintf("%s, ", gotype(c.Type.Name))
+			default:
+				// *ContactCreateOut
+				return fmt.Sprintf("*%sOut, ", name)
+			}
+		},
+		"outempty": func(name string, cs []*plugin.Column) string {
+			switch len(cs) {
+			case 0:
+				return ""
+			case 1:
+				c := cs[0]
+				switch gotype(c.Type.Name) {
+				case "[]byte":
+					return "nil"
+				case "text":
+					return `""`
+				default:
+					return "0"
+				}
+			default:
+				return "nil"
+			}
+		},
 		"camel": strcase.ToCamel,
 		"dbtype": func(dbtype string) string {
 			switch strings.ToLower(dbtype) {

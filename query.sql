@@ -9,6 +9,9 @@ RETURNING
 -- name: ContactRead :one
 SELECT * FROM contacts WHERE id = ? LIMIT 1;
 
+-- name: ContactCount :one
+SELECT COUNT(*) FROM contacts;
+
 -- name: ContactList :many
 SELECT
   *

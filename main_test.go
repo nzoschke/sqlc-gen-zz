@@ -36,6 +36,10 @@ func TestCRUD(t *testing.T) {
 		Name:      "name",
 	}, c1)
 
+	n, err := zz.ContactCount(conn)
+	a.NoError(err)
+	a.Equal(int64(1), n)
+
 	err = zz.ContactUpdate(conn, zz.ContactUpdateIn{
 		Id:   1,
 		Name: "new",
@@ -116,9 +120,7 @@ func TestJSONB(t *testing.T) {
 	c2, err := zz.ContactReadJSONB(conn, 1)
 	a.NoError(err)
 
-	a.Equal(&zz.ContactReadJSONBOut{
-		Blob: []byte("{}"),
-	}, c2)
+	a.Equal([]byte("{}"), c2)
 
 	err = zz.ContactDeleteAll(conn)
 	a.NoError(err)
