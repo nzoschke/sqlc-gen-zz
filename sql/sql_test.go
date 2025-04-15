@@ -1,22 +1,19 @@
-package main_test
+package sql_test
 
 import (
-	"embed"
 	"testing"
 
 	"github.com/nzoschke/sqlc-gen-zz/db"
+	"github.com/nzoschke/sqlc-gen-zz/sql"
 	"github.com/nzoschke/sqlc-gen-zz/zz"
 	"github.com/stretchr/testify/assert"
 )
-
-//go:embed *.sql
-var SQL embed.FS
 
 func TestCRUD(t *testing.T) {
 	ctx := t.Context()
 	a := assert.New(t)
 
-	db, err := db.New(ctx, SQL, "file::memory:?mode=memory&cache=shared")
+	db, err := db.New(ctx, sql.SQL, "file::memory:?mode=memory&cache=shared")
 	a.NoError(err)
 
 	conn, put, err := db.Take(ctx)
@@ -101,7 +98,7 @@ func TestJSONB(t *testing.T) {
 	ctx := t.Context()
 	a := assert.New(t)
 
-	db, err := db.New(ctx, SQL, "file::memory:?mode=memory&cache=shared")
+	db, err := db.New(ctx, sql.SQL, "file::memory:?mode=memory&cache=shared")
 	a.NoError(err)
 
 	conn, put, err := db.Take(ctx)

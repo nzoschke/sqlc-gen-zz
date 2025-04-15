@@ -10,5 +10,5 @@ sql:
     queries: "query.sql"
     schema: "schema.sql"
     codegen:
-      - out: zz
+      - out: c
         plugin: zz
