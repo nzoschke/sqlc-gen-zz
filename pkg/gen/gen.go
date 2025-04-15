@@ -21,6 +21,21 @@ func Gen(ctx context.Context, req *plugin.GenerateRequest) (*plugin.GenerateResp
 	slog.Info("gen", "req", req)
 
 	funcMap := template.FuncMap{
+		"camel": strcase.ToCamel,
+		"dbtype": func(dbtype string) string {
+			switch strings.ToLower(dbtype) {
+			case "any", "blob":
+				return "Bytes"
+			case "integer":
+				return "Int64"
+			case "real":
+				return "Float"
+			case "text":
+				return "Text"
+			}
+			return "Bytes"
+		},
+		"gotype": gotype,
 		"inarg": func(name string, ps []*plugin.Parameter) string {
 			switch len(ps) {
 			case 0:
@@ -65,57 +80,45 @@ func Gen(ctx context.Context, req *plugin.GenerateRequest) (*plugin.GenerateResp
 				return "nil"
 			}
 		},
-		"camel": strcase.ToCamel,
-		"dbtype": func(dbtype string) string {
-			switch strings.ToLower(dbtype) {
-			case "any", "blob":
-				return "Bytes"
-			case "integer":
-				return "Int64"
-			case "real":
-				return "Float"
-			case "text":
-				return "Text"
-			}
-			return "Bytes"
-		},
-		"gotype":   gotype,
 		"lower":    strings.ToLower,
 		"singular": pl.Singular,
 	}
 
-	c, err := template.New("catalog.tmpl").Funcs(funcMap).ParseFS(tmpl.Tmpl, "*.tmpl")
+	res := &plugin.GenerateResponse{
+		Files: []*plugin.File{},
+	}
+
+	t, err := template.New("catalog.tmpl").Funcs(funcMap).ParseFS(tmpl.Tmpl, "*.tmpl")
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
 
-	var cbuf bytes.Buffer
-	if err := c.Execute(&cbuf, req); err != nil {
+	var buf bytes.Buffer
+	if err := t.Execute(&buf, req); err != nil {
 		return nil, errors.WithStack(err)
 	}
 
-	q, err := template.New("queries.tmpl").Funcs(funcMap).ParseFS(tmpl.Tmpl, "*.tmpl")
+	res.Files = append(res.Files, &plugin.File{
+		Contents: buf.Bytes(),
+		Name:     "catalog.go",
+	})
+
+	t, err = template.New("queries.tmpl").Funcs(funcMap).ParseFS(tmpl.Tmpl, "*.tmpl")
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
 
-	var qbuf bytes.Buffer
-	if err := q.Execute(&qbuf, req); err != nil {
+	buf = bytes.Buffer{}
+	if err := t.Execute(&buf, req); err != nil {
 		return nil, errors.WithStack(err)
 	}
 
-	return &plugin.GenerateResponse{
-		Files: []*plugin.File{
-			{
-				Contents: cbuf.Bytes(),
-				Name:     "catalog.go",
-			},
-			{
-				Contents: qbuf.Bytes(),
-				Name:     "queries.go",
-			},
-		},
-	}, nil
+	res.Files = append(res.Files, &plugin.File{
+		Contents: buf.Bytes(),
+		Name:     "queries.go",
+	})
+
+	return res, nil
 }
 
 func gotype(dbtype string) string {
