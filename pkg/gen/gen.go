@@ -28,7 +28,7 @@ func Gen(ctx context.Context, req *plugin.GenerateRequest) (*plugin.GenerateResp
 				return "Int64"
 			case "real":
 				return "Float"
-			case "datetime", "text":
+			case "text":
 				return "Text"
 			default:
 				return "Bytes"
