@@ -42,9 +42,7 @@ func TestCRUD(t *testing.T) {
 	})
 	a.NoError(err)
 
-	c, err := zz.ContactRead(conn, zz.ContactReadIn{
-		Id: 1,
-	})
+	c, err := zz.ContactRead(conn, 1)
 	a.NoError(err)
 
 	a.Equal(&zz.ContactReadOut{
@@ -119,9 +117,7 @@ func TestJSONB(t *testing.T) {
 		Name:      "name",
 	}, c1)
 
-	c2, err := zz.ContactReadJSONB(conn, zz.ContactReadJSONBIn{
-		Id: 1,
-	})
+	c2, err := zz.ContactReadJSONB(conn, 1)
 	a.NoError(err)
 
 	a.Equal(&zz.ContactReadJSONBOut{
