@@ -80,14 +80,10 @@ func TestCRUD(t *testing.T) {
 		},
 	}, cs)
 
-	err = zz.ContactDelete(conn, zz.ContactDeleteIn{
-		Id: 1,
-	})
+	err = zz.ContactDelete(conn, 1)
 	a.NoError(err)
 
-	err = zz.ContactDelete(conn, zz.ContactDeleteIn{
-		Id: 2,
-	})
+	err = zz.ContactDelete(conn, 2)
 	a.NoError(err)
 
 	cs, err = zz.ContactList(conn, zz.ContactListIn{
@@ -132,6 +128,6 @@ func TestJSONB(t *testing.T) {
 		Blob: []byte("{}"),
 	}, c2)
 
-	err = zz.ContactDeleteAll(conn, zz.ContactDeleteAllIn{})
+	err = zz.ContactDeleteAll(conn)
 	a.NoError(err)
 }

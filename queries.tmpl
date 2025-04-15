@@ -16,7 +16,14 @@ type {{.Name}}In struct {
 }
 
 {{if eq .Cmd ":exec"}}
-{{template "exec.tmpl" .}}
+{{if eq (len .Params) 0}}
+{{template "exec0.tmpl" .}}
+{{else if eq (len .Params) 1}}
+{{template "exec1.tmpl" .}}
+{{else}}
+{{template "exec2.tmpl" .}}
+{{end}}
+
 {{else if eq .Cmd ":one"}}
 type {{.Name}}Out struct {
   {{- range .Columns}}
