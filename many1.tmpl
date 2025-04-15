@@ -14,11 +14,11 @@ func {{.Name}}(tx *sqlite.Conn {{inarg .Name .Params }}) ([]{{gotype $c.Type.Nam
 
   {{if eq (len .Params) 1}}
   {{ $p := index .Params 0 }}
-    stmt.Bind{{dbtype $p.Column.Type.Name}}(1, {{$p.Column.Name}})
+  stmt.Bind{{dbtype $p.Column.Type.Name}}(1, {{$p.Column.Name}})
   {{else if gt (len .Params) 1}}
-    {{range .Params}}
-    stmt.Bind{{dbtype .Column.Type.Name}}({{.Number}}, in.{{camel .Column.Name}})
-    {{end}}
+    {{- range .Params}}
+  stmt.Bind{{dbtype .Column.Type.Name}}({{.Number}}, in.{{camel .Column.Name}})
+    {{- end}}
   {{end}}
 
 	out := []{{gotype $c.Type.Name}}{}
@@ -31,7 +31,7 @@ func {{.Name}}(tx *sqlite.Conn {{inarg .Name .Params }}) ([]{{gotype $c.Type.Nam
       break
     }
 
-    {{- if eq (lower $c.Type.Name) "blob"}}
+    {{if eq (lower $c.Type.Name) "blob"}}
     c := []byte(stmt.ColumnText(0))
     {{ else }}
     c := stmt.Column{{dbtype $c.Type.Name}}(0)

@@ -15,9 +15,9 @@ import (
 		{{template "one.tmpl" .}}
 	{{else if eq .Cmd ":many"}}
 		{{if eq (len .Columns) 1}}
-		{{template "many1.tmpl" .}}
-		{{ else }}
-		{{template "many.tmpl" .}}
+			{{template "many1.tmpl" .}}
+		{{else }}
+			{{template "many.tmpl" .}}
 		{{end}}
 	{{end}}
 {{end}}

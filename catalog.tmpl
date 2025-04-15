@@ -3,12 +3,11 @@
 package {{.Settings.Codegen.Out}}
 
 {{range .Catalog.Schemas}}
-{{range .Tables}}
+  {{range .Tables}}
 type {{singular (camel .Rel.Name)}} struct {
   {{- range .Columns}}
     {{camel .Name}} {{gotype .Type.Name}} `json:"{{.Name}}"`
   {{- end}}
 }
+  {{end}}
 {{end}}
-{{end}}
-
