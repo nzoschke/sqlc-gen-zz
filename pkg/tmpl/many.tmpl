@@ -34,14 +34,10 @@ func {{.Name}}(tx *sqlite.Conn {{inarg .Name .Params }}) ({{.Name}}Out, error) {
     }
 
     row := {{.Name}}Row{}
+
+{{- $cs := .Columns }}
 {{- range $number, $col := .Columns}}
-  {{if eq (gotype .) "[]byte"}}
-    row.{{camel .Name}} = []byte(stmt.ColumnText({{$number}}))
-  {{else if eq (gotype .) "time.Time"}}
-    row.{{camel .Name}}, _ = time.Parse("2006-01-02 15:04:05", stmt.ColumnText({{$number}}))
-  {{else}}
-    row.{{camel .Name}} = stmt.Column{{dbtype .Type.Name}}({{$number}})
-  {{end}}
+  row.{{camel .Name}} = {{retval $cs $number}}
 {{- end}}
 
     out = append(out, row)

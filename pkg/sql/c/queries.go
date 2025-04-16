@@ -133,13 +133,9 @@ LIMIT
 		}
 
 		row := ContactListRow{}
-
 		row.Blob = []byte(stmt.ColumnText(0))
-
-		row.CreatedAt, _ = time.Parse("2006-01-02 15:04:05", stmt.ColumnText(1))
-
+		row.CreatedAt = timeParse(stmt.ColumnText(1))
 		row.Id = stmt.ColumnInt64(2)
-
 		row.Name = stmt.ColumnText(3)
 
 		out = append(out, row)

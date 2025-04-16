@@ -1,13 +1,12 @@
 {{if gt (len .Params) 1}}
 type {{.Name}}In struct {
-  {{- range .Params}}
-    {{camel .Column.Name}} {{gotype .Column}} `json:"{{.Column.Name}}"`
-  {{- end}}
+{{- range .Params}}
+  {{camel .Column.Name}} {{gotype .Column}} `json:"{{.Column.Name}}"`
+{{- end}}
 }
 {{end}}
 
 {{ $c := index .Columns 0 }}
-
 func {{.Name}}(tx *sqlite.Conn {{inarg .Name .Params }}) ([]{{gotype $c}}, error) {
   stmt := tx.Prep(`{{.Text}}`)
   defer stmt.Reset()
@@ -27,13 +26,7 @@ func {{.Name}}(tx *sqlite.Conn {{inarg .Name .Params }}) ([]{{gotype $c}}, error
       break
     }
 
-    {{if eq (gotype $c) "[]byte"}}
-    c := []byte(stmt.ColumnText(0))
-    {{else if eq (gotype $c) "time.Time"}}
-    c, _ = time.Parse("2006-01-02 15:04:05", stmt.ColumnText(0))
-    {{ else }}
-    c := stmt.Column{{dbtype $c.Type.Name}}(0)
-    {{end}}
+    c := {{retval .Columns 0}}
 
     out = append(out, c)
   }
