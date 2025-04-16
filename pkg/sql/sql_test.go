@@ -21,8 +21,9 @@ func TestCRUD(t *testing.T) {
 	defer put()
 
 	c1, err := c.ContactCreate(conn, c.ContactCreateIn{
-		Blob: []byte("b"),
-		Name: "name",
+		Blob:     []byte("b"),
+		MetaJson: []byte{},
+		Name:     "name",
 	})
 	a.NoError(err)
 
@@ -30,6 +31,7 @@ func TestCRUD(t *testing.T) {
 		Blob:      []byte("b"),
 		CreatedAt: c1.CreatedAt,
 		Id:        1,
+		MetaJson:  []byte{},
 		Name:      "name",
 	}, c1)
 
@@ -54,6 +56,7 @@ func TestCRUD(t *testing.T) {
 		Blob:      []byte("b"),
 		CreatedAt: at,
 		Id:        1,
+		MetaJson:  []byte{},
 		Name:      "new",
 	}, cr)
 
@@ -71,12 +74,14 @@ func TestCRUD(t *testing.T) {
 			Blob:      []byte("b"),
 			CreatedAt: at,
 			Id:        1,
+			MetaJson:  []byte{},
 			Name:      "new",
 		},
 		{
 			Blob:      []byte("b"),
 			CreatedAt: c2.CreatedAt,
 			Id:        2,
+			MetaJson:  []byte{},
 			Name:      "name",
 		},
 	}, cs)
@@ -110,8 +115,9 @@ func TestJSONB(t *testing.T) {
 	defer put()
 
 	c1, err := c.ContactCreateJSONB(conn, c.ContactCreateJSONBIn{
-		Blob: []byte("{}"),
-		Name: "name",
+		Blob:     []byte("{}"),
+		MetaJson: []byte{},
+		Name:     "name",
 	})
 	a.NoError(err)
 
@@ -120,6 +126,7 @@ func TestJSONB(t *testing.T) {
 		Blob:      c1.Blob,
 		CreatedAt: c1.CreatedAt,
 		Id:        1,
+		MetaJson:  []byte{},
 		Name:      "name",
 	}, c1)
 
