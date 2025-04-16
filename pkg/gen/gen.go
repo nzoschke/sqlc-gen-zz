@@ -20,7 +20,7 @@ var pl = pluralize.NewClient()
 func Gen(ctx context.Context, req *plugin.GenerateRequest) (*plugin.GenerateResponse, error) {
 	slog.Info("gen", "req", req)
 
-	funcMap := template.FuncMap{
+	fm := template.FuncMap{
 		"camel":      strcase.ToCamel,
 		"bindval":    bindval,
 		"dbtype":     dbtype,
@@ -38,7 +38,7 @@ func Gen(ctx context.Context, req *plugin.GenerateRequest) (*plugin.GenerateResp
 		Files: []*plugin.File{},
 	}
 
-	t, err := template.New("catalog.tmpl").Funcs(funcMap).ParseFS(tmpl.Tmpl, "*.tmpl")
+	t, err := template.New("catalog.tmpl").Funcs(fm).ParseFS(tmpl.Tmpl, "*.tmpl")
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
@@ -53,7 +53,7 @@ func Gen(ctx context.Context, req *plugin.GenerateRequest) (*plugin.GenerateResp
 		Name:     "catalog.go",
 	})
 
-	t, err = template.New("queries.tmpl").Funcs(funcMap).ParseFS(tmpl.Tmpl, "*.tmpl")
+	t, err = template.New("queries.tmpl").Funcs(fm).ParseFS(tmpl.Tmpl, "*.tmpl")
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
