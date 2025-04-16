@@ -29,9 +29,9 @@ sql:
         plugin: zz
 ```
 
-## SQLite Quirks
+## Conventions
 
-If a text field ends with `_at` it is converted to/from a `YYYY-MM-DD HH:MM:SS` string and a `time.Time` in support of:
+If a text field ends with `_at` it is converted from/to a `YYYY-MM-DD HH:MM:SS` string and a `time.Time` in support of:
 
 ```sql
 created_at TEXT DEFAULT CURRENT_TIMESTAMP NOT NULL
@@ -40,6 +40,7 @@ created_at TEXT DEFAULT CURRENT_TIMESTAMP NOT NULL
 ## Development
 
 ```bash
+rm -rf pkg/sql/c
 go install ./... 
 go generate ./...
 go test ./...
