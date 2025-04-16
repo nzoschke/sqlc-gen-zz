@@ -2,6 +2,7 @@ package sql_test
 
 import (
 	"testing"
+	"time"
 
 	"github.com/nzoschke/sqlc-gen-zz/pkg/db"
 	"github.com/nzoschke/sqlc-gen-zz/pkg/sql/c"
@@ -32,13 +33,17 @@ func TestCRUD(t *testing.T) {
 		Name:      "name",
 	}, c1)
 
+	a.Equal(time.Now().UTC().Format("2006-01-02"), c1.CreatedAt.Format("2006-01-02"))
+
 	n, err := c.ContactCount(conn)
 	a.NoError(err)
 	a.Equal(int64(1), n)
 
+	at := time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC)
 	err = c.ContactUpdate(conn, c.ContactUpdateIn{
-		Id:   1,
-		Name: "new",
+		CreatedAt: at,
+		Id:        1,
+		Name:      "new",
 	})
 	a.NoError(err)
 
@@ -47,7 +52,7 @@ func TestCRUD(t *testing.T) {
 
 	a.Equal(&c.ContactReadOut{
 		Blob:      []byte("b"),
-		CreatedAt: cr.CreatedAt,
+		CreatedAt: at,
 		Id:        1,
 		Name:      "new",
 	}, cr)
@@ -64,7 +69,7 @@ func TestCRUD(t *testing.T) {
 	a.Equal(c.ContactListOut{
 		{
 			Blob:      []byte("b"),
-			CreatedAt: c1.CreatedAt,
+			CreatedAt: at,
 			Id:        1,
 			Name:      "new",
 		},

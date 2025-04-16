@@ -1,31 +1,27 @@
 {{if gt (len .Params) 1}}
 type {{.Name}}In struct {
-  {{- range .Params}}
-    {{camel .Column.Name}} {{gotype .Column.Type.Name}} `json:"{{.Column.Name}}"`
-  {{- end}}
+{{- range .Params}}
+  {{camel .Column.Name}} {{gotype .Column}} `json:"{{.Column.Name}}"`
+{{- end}}
 }
 {{end}}
 
 type {{.Name}}Out []{{.Name}}Row
 
 type {{.Name}}Row struct {
-  {{- range .Columns}}
-    {{camel .Name}} {{gotype .Type.Name}} `json:"{{.Name}}"`
-  {{- end}}
+{{- range .Columns}}
+  {{camel .Name}} {{gotype .}} `json:"{{.Name}}"`
+{{- end}}
 }
 
 func {{.Name}}(tx *sqlite.Conn {{inarg .Name .Params }}) ({{.Name}}Out, error) {
   stmt := tx.Prep(`{{.Text}}`)
   defer stmt.Reset()
 
-  {{if eq (len .Params) 1}}
-  {{ $p := index .Params 0 }}
-  stmt.Bind{{dbtype $p.Column.Type.Name}}(1, {{$p.Column.Name}})
-  {{else if gt (len .Params) 1}}
-    {{- range .Params}}
-  stmt.Bind{{dbtype .Column.Type.Name}}({{.Number}}, in.{{camel .Column.Name}})
-    {{- end}}
-  {{end}}
+{{ $ps := .Params }}
+{{- range .Params}}
+  stmt.Bind{{dbtype .Column.Type.Name}}({{.Number}}, {{bindval $ps .Number}})
+{{- end}}
 
 	out := {{.Name}}Out{}
   for {
@@ -38,13 +34,11 @@ func {{.Name}}(tx *sqlite.Conn {{inarg .Name .Params }}) ({{.Name}}Out, error) {
     }
 
     row := {{.Name}}Row{}
-    {{- range $number, $col := .Columns}}
-    {{if eq (lower .Type.Name) "blob"}}
-    row.{{camel .Name}} = []byte(stmt.ColumnText({{$number}}))
-    {{else}}
-    row.{{camel .Name}} = stmt.Column{{dbtype .Type.Name}}({{$number}})
-    {{end}}
-    {{- end}}
+
+{{- $cs := .Columns }}
+{{- range $number, $col := .Columns}}
+  row.{{camel .Name}} = {{retval $cs $number}}
+{{- end}}
 
     out = append(out, row)
   }

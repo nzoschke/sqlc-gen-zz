@@ -22,19 +22,28 @@ func Gen(ctx context.Context, req *plugin.GenerateRequest) (*plugin.GenerateResp
 
 	funcMap := template.FuncMap{
 		"camel": strcase.ToCamel,
-		"dbtype": func(dbtype string) string {
-			switch strings.ToLower(dbtype) {
-			case "any", "blob":
-				return "Bytes"
-			case "integer":
-				return "Int64"
-			case "real":
-				return "Float"
-			case "text":
-				return "Text"
+		"bindval": func(ps []*plugin.Parameter, i int32) string {
+			p := ps[i-1]
+
+			cast := func(v string) string {
+				switch gotype(p.Column) {
+				case "time.Time":
+					return fmt.Sprintf(`%s.Format("2006-01-02 15:04:05")`, v)
+				default:
+					return v
+				}
 			}
-			return "Bytes"
+
+			switch len(ps) {
+			case 1:
+				// id
+				return cast(p.Column.Name)
+			default:
+				// in.Id
+				return cast(fmt.Sprintf("in.%s", strcase.ToCamel(p.Column.Name)))
+			}
 		},
+		"dbtype": dbtype,
 		"gotype": gotype,
 		"inarg": func(name string, ps []*plugin.Parameter) string {
 			switch len(ps) {
@@ -43,9 +52,9 @@ func Gen(ctx context.Context, req *plugin.GenerateRequest) (*plugin.GenerateResp
 			case 1:
 				// id int
 				p := ps[0]
-				return fmt.Sprintf(", %s %s", p.Column.Name, gotype(p.Column.Type.Name))
+				return fmt.Sprintf(", %s %s", p.Column.Name, gotype(p.Column))
 			default:
-				// ContactCreateIn
+				// in ContactCreateIn
 				return fmt.Sprintf(", in %sIn", name)
 			}
 		},
@@ -56,32 +65,60 @@ func Gen(ctx context.Context, req *plugin.GenerateRequest) (*plugin.GenerateResp
 			case 1:
 				// int
 				c := cs[0]
-				return fmt.Sprintf("%s, ", gotype(c.Type.Name))
+				return fmt.Sprintf("%s, ", gotype(c))
 			default:
 				// *ContactCreateOut
 				return fmt.Sprintf("*%sOut, ", name)
 			}
 		},
-		"outempty": func(name string, cs []*plugin.Column) string {
+		"lower": strings.ToLower,
+		"retempty": func(name string, cs []*plugin.Column) string {
 			switch len(cs) {
 			case 0:
 				return ""
 			case 1:
 				c := cs[0]
-				switch gotype(c.Type.Name) {
+				switch gotype(c) {
 				case "[]byte":
 					return "nil"
+				case "time.Time":
+					return "time.Time{}"
 				case "text":
 					return `""`
-				default:
+				case "int64", "float64":
 					return "0"
+				default:
+					return "nil"
 				}
 			default:
 				return "nil"
 			}
 		},
-		"lower":    strings.ToLower,
+		"retval": func(cs []*plugin.Column, i int) string {
+			c := cs[i]
+
+			switch gotype(c) {
+			case "[]byte":
+				return fmt.Sprintf("[]byte(stmt.ColumnText(%d))", i)
+			case "time.Time":
+				return fmt.Sprintf("timeParse(stmt.ColumnText(%d))", i)
+			default:
+				return fmt.Sprintf("stmt.Column%s(%d)", dbtype(c.Type.Name), i)
+			}
+		},
 		"singular": pl.Singular,
+		"timeimport": func(c *plugin.Catalog) string {
+			for _, s := range c.Schemas {
+				for _, t := range s.Tables {
+					for _, c := range t.Columns {
+						if gotype(c) == "time.Time" {
+							return `"time"`
+						}
+					}
+				}
+			}
+			return ""
+		},
 	}
 
 	res := &plugin.GenerateResponse{
@@ -121,16 +158,33 @@ func Gen(ctx context.Context, req *plugin.GenerateRequest) (*plugin.GenerateResp
 	return res, nil
 }
 
-func gotype(dbtype string) string {
-	switch strings.ToLower(dbtype) {
-	case "any", "blob":
-		return "[]byte"
+func dbtype(t string) string {
+	switch strings.ToLower(t) {
+	case "integer":
+		return "Int64"
+	case "real":
+		return "Float"
+	case "text":
+		return "Text"
+	default:
+		return "Bytes"
+	}
+}
+
+func gotype(c *plugin.Column) string {
+	if strings.HasSuffix(c.Name, "_at") {
+		return "time.Time"
+	}
+
+	// https://sqlite.org/datatype3.html#affinity_name_examples
+	switch strings.ToLower(c.Type.Name) {
 	case "integer":
 		return "int64"
 	case "real":
 		return "float64"
 	case "text":
 		return "string"
+	default:
+		return "[]byte"
 	}
-	return "[]byte"
 }

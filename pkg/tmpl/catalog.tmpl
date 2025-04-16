@@ -2,11 +2,15 @@
 
 package {{.Settings.Codegen.Out}}
 
+import (
+	{{timeimport .Catalog}}
+)
+
 {{range .Catalog.Schemas}}
   {{range .Tables}}
 type {{singular (camel .Rel.Name)}} struct {
   {{- range .Columns}}
-    {{camel .Name}} {{gotype .Type.Name}} `json:"{{.Name}}"`
+    {{camel .Name}} {{gotype .}} `json:"{{.Name}}"`
   {{- end}}
 }
   {{end}}

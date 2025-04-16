@@ -4,6 +4,7 @@ package c
 
 import (
 	"database/sql"
+	"time"
 
 	"zombiezen.com/go/sqlite"
 )
@@ -14,10 +15,10 @@ type ContactCreateIn struct {
 }
 
 type ContactCreateOut struct {
-	Blob      []byte  `json:"blob"`
-	CreatedAt float64 `json:"created_at"`
-	Id        int64   `json:"id"`
-	Name      string  `json:"name"`
+	Blob      []byte    `json:"blob"`
+	CreatedAt time.Time `json:"created_at"`
+	Id        int64     `json:"id"`
+	Name      string    `json:"name"`
 }
 
 func ContactCreate(tx *sqlite.Conn, in ContactCreateIn) (*ContactCreateOut, error) {
@@ -41,13 +42,9 @@ RETURNING
 	}
 
 	out := ContactCreateOut{}
-
 	out.Blob = []byte(stmt.ColumnText(0))
-
-	out.CreatedAt = stmt.ColumnFloat(1)
-
+	out.CreatedAt = timeParse(stmt.ColumnText(1))
 	out.Id = stmt.ColumnInt64(2)
-
 	out.Name = stmt.ColumnText(3)
 
 	return &out, nil
@@ -55,10 +52,10 @@ RETURNING
 }
 
 type ContactReadOut struct {
-	Blob      []byte  `json:"blob"`
-	CreatedAt float64 `json:"created_at"`
-	Id        int64   `json:"id"`
-	Name      string  `json:"name"`
+	Blob      []byte    `json:"blob"`
+	CreatedAt time.Time `json:"created_at"`
+	Id        int64     `json:"id"`
+	Name      string    `json:"name"`
 }
 
 func ContactRead(tx *sqlite.Conn, id int64) (*ContactReadOut, error) {
@@ -76,13 +73,9 @@ func ContactRead(tx *sqlite.Conn, id int64) (*ContactReadOut, error) {
 	}
 
 	out := ContactReadOut{}
-
 	out.Blob = []byte(stmt.ColumnText(0))
-
-	out.CreatedAt = stmt.ColumnFloat(1)
-
+	out.CreatedAt = timeParse(stmt.ColumnText(1))
 	out.Id = stmt.ColumnInt64(2)
-
 	out.Name = stmt.ColumnText(3)
 
 	return &out, nil
@@ -112,10 +105,10 @@ func ContactCount(tx *sqlite.Conn) (int64, error) {
 type ContactListOut []ContactListRow
 
 type ContactListRow struct {
-	Blob      []byte  `json:"blob"`
-	CreatedAt float64 `json:"created_at"`
-	Id        int64   `json:"id"`
-	Name      string  `json:"name"`
+	Blob      []byte    `json:"blob"`
+	CreatedAt time.Time `json:"created_at"`
+	Id        int64     `json:"id"`
+	Name      string    `json:"name"`
 }
 
 func ContactList(tx *sqlite.Conn, limit int64) (ContactListOut, error) {
@@ -140,13 +133,9 @@ LIMIT
 		}
 
 		row := ContactListRow{}
-
 		row.Blob = []byte(stmt.ColumnText(0))
-
-		row.CreatedAt = stmt.ColumnFloat(1)
-
+		row.CreatedAt = timeParse(stmt.ColumnText(1))
 		row.Id = stmt.ColumnInt64(2)
-
 		row.Name = stmt.ColumnText(3)
 
 		out = append(out, row)
@@ -185,21 +174,24 @@ LIMIT
 }
 
 type ContactUpdateIn struct {
-	Name string `json:"name"`
-	Id   int64  `json:"id"`
+	CreatedAt time.Time `json:"created_at"`
+	Name      string    `json:"name"`
+	Id        int64     `json:"id"`
 }
 
 func ContactUpdate(tx *sqlite.Conn, in ContactUpdateIn) error {
 	stmt := tx.Prep(`UPDATE
   contacts
 SET
+  created_at = ?,
   name = ?
 WHERE
   id = ?`)
 	defer stmt.Reset()
 
-	stmt.BindText(1, in.Name)
-	stmt.BindInt64(2, in.Id)
+	stmt.BindText(1, in.CreatedAt.Format("2006-01-02 15:04:05"))
+	stmt.BindText(2, in.Name)
+	stmt.BindInt64(3, in.Id)
 
 	_, err := stmt.Step()
 	if err != nil {
@@ -245,11 +237,11 @@ type ContactCreateJSONBIn struct {
 }
 
 type ContactCreateJSONBOut struct {
-	Json      []byte  `json:"json"`
-	Blob      []byte  `json:"blob"`
-	CreatedAt float64 `json:"created_at"`
-	Id        int64   `json:"id"`
-	Name      string  `json:"name"`
+	Json      []byte    `json:"json"`
+	Blob      []byte    `json:"blob"`
+	CreatedAt time.Time `json:"created_at"`
+	Id        int64     `json:"id"`
+	Name      string    `json:"name"`
 }
 
 func ContactCreateJSONB(tx *sqlite.Conn, in ContactCreateJSONBIn) (*ContactCreateJSONBOut, error) {
@@ -274,15 +266,10 @@ RETURNING
 	}
 
 	out := ContactCreateJSONBOut{}
-
 	out.Json = []byte(stmt.ColumnText(0))
-
 	out.Blob = []byte(stmt.ColumnText(1))
-
-	out.CreatedAt = stmt.ColumnFloat(2)
-
+	out.CreatedAt = timeParse(stmt.ColumnText(2))
 	out.Id = stmt.ColumnInt64(3)
-
 	out.Name = stmt.ColumnText(4)
 
 	return &out, nil
@@ -316,4 +303,9 @@ LIMIT
 
 	return []byte(stmt.ColumnText(0)), nil
 
+}
+
+func timeParse(s string) time.Time {
+	t, _ := time.Parse("2006-01-02 15:04:05", s)
+	return t
 }
