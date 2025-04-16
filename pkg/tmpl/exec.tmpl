@@ -1,8 +1,8 @@
 {{if gt (len .Params) 1}}
 type {{.Name}}In struct {
-  {{- range .Params}}
-    {{camel .Column.Name}} {{gotype .Column}} `json:"{{.Column.Name}}"`
-  {{- end}}
+{{- range .Params}}
+  {{camel .Column.Name}} {{gotype .Column}} `json:"{{.Column.Name}}"`
+{{- end}}
 }
 {{end}}
 
@@ -10,10 +10,10 @@ func {{.Name}}(tx *sqlite.Conn {{inarg .Name .Params }}) (error) {
   stmt := tx.Prep(`{{.Text}}`)
   defer stmt.Reset()
 
-  {{ $ps := .Params }}
-  {{- range .Params}}
+{{ $ps := .Params }}
+{{- range .Params}}
   stmt.Bind{{dbtype .Column.Type.Name}}({{.Number}}, {{bindval $ps .Number}})
-  {{- end}}
+{{- end}}
   
   _, err := stmt.Step()
   if err != nil {

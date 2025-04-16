@@ -42,13 +42,9 @@ RETURNING
 	}
 
 	out := ContactCreateOut{}
-
 	out.Blob = []byte(stmt.ColumnText(0))
-
-	out.CreatedAt, _ = time.Parse("2006-01-02 15:04:05", stmt.ColumnText(1))
-
+	out.CreatedAt = timeParse(stmt.ColumnText(1))
 	out.Id = stmt.ColumnInt64(2)
-
 	out.Name = stmt.ColumnText(3)
 
 	return &out, nil
@@ -77,13 +73,9 @@ func ContactRead(tx *sqlite.Conn, id int64) (*ContactReadOut, error) {
 	}
 
 	out := ContactReadOut{}
-
 	out.Blob = []byte(stmt.ColumnText(0))
-
-	out.CreatedAt, _ = time.Parse("2006-01-02 15:04:05", stmt.ColumnText(1))
-
+	out.CreatedAt = timeParse(stmt.ColumnText(1))
 	out.Id = stmt.ColumnInt64(2)
-
 	out.Name = stmt.ColumnText(3)
 
 	return &out, nil
@@ -278,15 +270,10 @@ RETURNING
 	}
 
 	out := ContactCreateJSONBOut{}
-
 	out.Json = []byte(stmt.ColumnText(0))
-
 	out.Blob = []byte(stmt.ColumnText(1))
-
-	out.CreatedAt, _ = time.Parse("2006-01-02 15:04:05", stmt.ColumnText(2))
-
+	out.CreatedAt = timeParse(stmt.ColumnText(2))
 	out.Id = stmt.ColumnInt64(3)
-
 	out.Name = stmt.ColumnText(4)
 
 	return &out, nil
@@ -320,4 +307,9 @@ LIMIT
 
 	return []byte(stmt.ColumnText(0)), nil
 
+}
+
+func timeParse(s string) time.Time {
+	t, _ := time.Parse("2006-01-02 15:04:05", s)
+	return t
 }

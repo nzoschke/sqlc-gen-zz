@@ -43,18 +43,7 @@ func Gen(ctx context.Context, req *plugin.GenerateRequest) (*plugin.GenerateResp
 				return cast(fmt.Sprintf("in.%s", strcase.ToCamel(p.Column.Name)))
 			}
 		},
-		"dbtype": func(dbtype string) string {
-			switch strings.ToLower(dbtype) {
-			case "integer":
-				return "Int64"
-			case "real":
-				return "Float"
-			case "text":
-				return "Text"
-			default:
-				return "Bytes"
-			}
-		},
+		"dbtype": dbtype,
 		"gotype": gotype,
 		"inarg": func(name string, ps []*plugin.Parameter) string {
 			switch len(ps) {
@@ -82,7 +71,8 @@ func Gen(ctx context.Context, req *plugin.GenerateRequest) (*plugin.GenerateResp
 				return fmt.Sprintf("*%sOut, ", name)
 			}
 		},
-		"outempty": func(name string, cs []*plugin.Column) string {
+		"lower": strings.ToLower,
+		"retempty": func(name string, cs []*plugin.Column) string {
 			switch len(cs) {
 			case 0:
 				return ""
@@ -104,7 +94,18 @@ func Gen(ctx context.Context, req *plugin.GenerateRequest) (*plugin.GenerateResp
 				return "nil"
 			}
 		},
-		"lower":    strings.ToLower,
+		"retval": func(cs []*plugin.Column, i int) string {
+			c := cs[i]
+
+			switch gotype(c) {
+			case "[]byte":
+				return fmt.Sprintf("[]byte(stmt.ColumnText(%d))", i)
+			case "time.Time":
+				return fmt.Sprintf("timeParse(stmt.ColumnText(%d))", i)
+			default:
+				return fmt.Sprintf("stmt.Column%s(%d)", dbtype(c.Type.Name), i)
+			}
+		},
 		"singular": pl.Singular,
 		"timeimport": func(c *plugin.Catalog) string {
 			for _, s := range c.Schemas {
@@ -155,6 +156,19 @@ func Gen(ctx context.Context, req *plugin.GenerateRequest) (*plugin.GenerateResp
 	})
 
 	return res, nil
+}
+
+func dbtype(t string) string {
+	switch strings.ToLower(t) {
+	case "integer":
+		return "Int64"
+	case "real":
+		return "Float"
+	case "text":
+		return "Text"
+	default:
+		return "Bytes"
+	}
 }
 
 func gotype(c *plugin.Column) string {

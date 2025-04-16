@@ -1,27 +1,27 @@
 {{if gt (len .Params) 1}}
 type {{.Name}}In struct {
-  {{- range .Params}}
-    {{camel .Column.Name}} {{gotype .Column}} `json:"{{.Column.Name}}"`
-  {{- end}}
+{{- range .Params}}
+  {{camel .Column.Name}} {{gotype .Column}} `json:"{{.Column.Name}}"`
+{{- end}}
 }
 {{end}}
 
 type {{.Name}}Out []{{.Name}}Row
 
 type {{.Name}}Row struct {
-  {{- range .Columns}}
-    {{camel .Name}} {{gotype .}} `json:"{{.Name}}"`
-  {{- end}}
+{{- range .Columns}}
+  {{camel .Name}} {{gotype .}} `json:"{{.Name}}"`
+{{- end}}
 }
 
 func {{.Name}}(tx *sqlite.Conn {{inarg .Name .Params }}) ({{.Name}}Out, error) {
   stmt := tx.Prep(`{{.Text}}`)
   defer stmt.Reset()
 
-  {{ $ps := .Params }}
-  {{- range .Params}}
+{{ $ps := .Params }}
+{{- range .Params}}
   stmt.Bind{{dbtype .Column.Type.Name}}({{.Number}}, {{bindval $ps .Number}})
-  {{- end}}
+{{- end}}
 
 	out := {{.Name}}Out{}
   for {
@@ -34,15 +34,15 @@ func {{.Name}}(tx *sqlite.Conn {{inarg .Name .Params }}) ({{.Name}}Out, error) {
     }
 
     row := {{.Name}}Row{}
-    {{- range $number, $col := .Columns}}
-    {{if eq (gotype .) "[]byte"}}
+{{- range $number, $col := .Columns}}
+  {{if eq (gotype .) "[]byte"}}
     row.{{camel .Name}} = []byte(stmt.ColumnText({{$number}}))
-    {{else if eq (gotype .) "time.Time"}}
+  {{else if eq (gotype .) "time.Time"}}
     row.{{camel .Name}}, _ = time.Parse("2006-01-02 15:04:05", stmt.ColumnText({{$number}}))
-    {{else}}
+  {{else}}
     row.{{camel .Name}} = stmt.Column{{dbtype .Type.Name}}({{$number}})
-    {{end}}
-    {{- end}}
+  {{end}}
+{{- end}}
 
     out = append(out, row)
   }
