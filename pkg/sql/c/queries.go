@@ -186,21 +186,24 @@ LIMIT
 }
 
 type ContactUpdateIn struct {
-	Name string `json:"name"`
-	Id   int64  `json:"id"`
+	CreatedAt time.Time `json:"created_at"`
+	Name      string    `json:"name"`
+	Id        int64     `json:"id"`
 }
 
 func ContactUpdate(tx *sqlite.Conn, in ContactUpdateIn) error {
 	stmt := tx.Prep(`UPDATE
   contacts
 SET
+  created_at = ?,
   name = ?
 WHERE
   id = ?`)
 	defer stmt.Reset()
 
-	stmt.BindText(1, in.Name)
-	stmt.BindInt64(2, in.Id)
+	stmt.BindText(1, in.CreatedAt.Format("2006-01-02 15:04:05"))
+	stmt.BindText(2, in.Name)
+	stmt.BindInt64(3, in.Id)
 
 	_, err := stmt.Step()
 	if err != nil {

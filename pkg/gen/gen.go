@@ -22,6 +22,27 @@ func Gen(ctx context.Context, req *plugin.GenerateRequest) (*plugin.GenerateResp
 
 	funcMap := template.FuncMap{
 		"camel": strcase.ToCamel,
+		"bindval": func(ps []*plugin.Parameter, i int32) string {
+			p := ps[i-1]
+
+			cast := func(v string) string {
+				switch gotype(p.Column) {
+				case "time.Time":
+					return fmt.Sprintf(`%s.Format("2006-01-02 15:04:05")`, v)
+				default:
+					return v
+				}
+			}
+
+			switch len(ps) {
+			case 1:
+				// id
+				return cast(p.Column.Name)
+			default:
+				// in.Id
+				return cast(fmt.Sprintf("in.%s", strcase.ToCamel(p.Column.Name)))
+			}
+		},
 		"dbtype": func(dbtype string) string {
 			switch strings.ToLower(dbtype) {
 			case "integer":
@@ -44,7 +65,7 @@ func Gen(ctx context.Context, req *plugin.GenerateRequest) (*plugin.GenerateResp
 				p := ps[0]
 				return fmt.Sprintf(", %s %s", p.Column.Name, gotype(p.Column))
 			default:
-				// ContactCreateIn
+				// in ContactCreateIn
 				return fmt.Sprintf(", in %sIn", name)
 			}
 		},
@@ -70,10 +91,14 @@ func Gen(ctx context.Context, req *plugin.GenerateRequest) (*plugin.GenerateResp
 				switch gotype(c) {
 				case "[]byte":
 					return "nil"
+				case "time.Time":
+					return "time.Time{}"
 				case "text":
 					return `""`
-				default:
+				case "int64", "float64":
 					return "0"
+				default:
+					return "nil"
 				}
 			default:
 				return "nil"

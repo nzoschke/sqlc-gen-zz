@@ -32,6 +32,7 @@ LIMIT
 UPDATE
   contacts
 SET
+  created_at = ?,
   name = ?
 WHERE
   id = ?;

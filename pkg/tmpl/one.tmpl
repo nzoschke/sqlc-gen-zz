@@ -16,14 +16,10 @@ func {{.Name}}(tx *sqlite.Conn {{inarg .Name .Params }}) ({{outarg .Name .Column
   stmt := tx.Prep(`{{.Text}}`)
   defer stmt.Reset()
 
-  {{if eq (len .Params) 1}}
-    {{ $p := index .Params 0 }}
-  stmt.Bind{{dbtype $p.Column.Type.Name}}(1, {{$p.Column.Name}})
-  {{else if gt (len .Params) 1}}
-    {{- range .Params}}
-  stmt.Bind{{dbtype .Column.Type.Name}}({{.Number}}, in.{{camel .Column.Name}})
-    {{- end}}
-  {{end}}
+  {{ $ps := .Params }}
+  {{- range .Params}}
+  stmt.Bind{{dbtype .Column.Type.Name}}({{.Number}}, {{bindval $ps .Number}})
+  {{- end}}
 
   ok, err := stmt.Step()
   if err != nil {
