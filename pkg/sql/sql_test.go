@@ -147,7 +147,3 @@ func TestJSONB(t *testing.T) {
 	err = c.ContactDeleteAll(conn)
 	a.NoError(err)
 }
-
-func TestJSON(t *testing.T) {
-
-}

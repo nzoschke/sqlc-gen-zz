@@ -23,12 +23,12 @@ plugins:
       cmd: sqlc-gen-zz
 
 sql:
-  - engine: "sqlite"
-    queries: "query.sql"
-    schema: "schema.sql"
-    codegen:
+  - codegen:
       - out: c
         plugin: zz
+    engine: "sqlite"
+    queries: "query.sql"
+    schema: "schema.sql"
 ```
 
 ## Time Convention

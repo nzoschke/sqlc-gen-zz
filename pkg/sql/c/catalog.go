@@ -3,7 +3,6 @@
 package c
 
 import (
-	"encoding/json"
 	"time"
 
 	"github.com/nzoschke/sqlc-gen-zz/pkg/sql/models"
@@ -18,6 +17,5 @@ type Contact struct {
 }
 
 func catalogImports() {
-	_ = json.Decoder{}
 	_ = time.Time{}
 }

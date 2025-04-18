@@ -3,7 +3,6 @@
 package {{.Settings.Codegen.Out}}
 
 import (
-	"encoding/json"
 	"time"
 
 	{{imports .Overrides}}
@@ -20,6 +19,5 @@ type {{singular (camel .Rel.Name)}} struct {
 {{end}}
 
 func catalogImports() {
-	_ = json.Decoder{}
 	_ = time.Time{}
 }
