@@ -4,7 +4,6 @@ package c
 
 import (
 	"database/sql"
-	"encoding/json"
 	"time"
 
 	"zombiezen.com/go/sqlite"
@@ -318,17 +317,6 @@ LIMIT
 
 	return []byte(stmt.ColumnText(0)), nil
 
-}
-
-func jsonMarshal(v any) []byte {
-	bs, _ := json.Marshal(v)
-	return bs
-}
-
-func unmarshalModelsBook(bs []byte) models.Book {
-	var v models.Book
-	json.Unmarshal(bs, &v)
-	return v
 }
 
 func timeParse(s string) time.Time {

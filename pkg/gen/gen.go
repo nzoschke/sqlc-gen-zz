@@ -23,7 +23,9 @@ var (
 )
 
 type Options struct {
+	Catalog   *plugin.Catalog
 	Overrides []Override `json:"overrides"`
+	Settings  *plugin.Settings
 }
 
 type GoType struct {
@@ -37,6 +39,11 @@ type Override struct {
 	GoType GoType `json:"go_type"`
 }
 
+type Data struct {
+	Req  *plugin.GenerateRequest
+	Opts Options
+}
+
 func Gen(ctx context.Context, req *plugin.GenerateRequest) (*plugin.GenerateResponse, error) {
 	if err := json.Unmarshal(req.PluginOptions, &opts); err != nil {
 		return nil, errors.WithStack(err)
@@ -45,6 +52,9 @@ func Gen(ctx context.Context, req *plugin.GenerateRequest) (*plugin.GenerateResp
 	for _, o := range opts.Overrides {
 		overrides[o.Column] = o.GoType
 	}
+
+	opts.Settings = req.Settings
+	opts.Catalog = req.Catalog
 
 	res := &plugin.GenerateResponse{
 		Files: []*plugin.File{},
@@ -79,6 +89,21 @@ func Gen(ctx context.Context, req *plugin.GenerateRequest) (*plugin.GenerateResp
 	res.Files = append(res.Files, &plugin.File{
 		Contents: buf.Bytes(),
 		Name:     "catalog.go",
+	})
+
+	t, err = template.New("json.tmpl").Funcs(fm).ParseFS(tmpl.Tmpl, "*.tmpl")
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	buf = bytes.Buffer{}
+	if err := t.Execute(&buf, opts); err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	res.Files = append(res.Files, &plugin.File{
+		Contents: buf.Bytes(),
+		Name:     "json.go",
 	})
 
 	t, err = template.New("queries.tmpl").Funcs(fm).ParseFS(tmpl.Tmpl, "*.tmpl")
