@@ -3,6 +3,7 @@
 package c
 
 import (
+	"encoding/json"
 	"time"
 
 	"github.com/nzoschke/sqlc-gen-zz/pkg/sql/models"
@@ -12,6 +13,11 @@ type Contact struct {
 	Blob      []byte      `json:"blob"`
 	CreatedAt time.Time   `json:"created_at"`
 	Id        int64       `json:"id"`
-	Meta      models.Book `json:"meta"`
+	Info      models.Info `json:"info"`
 	Name      string      `json:"name"`
+}
+
+func catalogImports() {
+	_ = json.Decoder{}
+	_ = time.Time{}
 }

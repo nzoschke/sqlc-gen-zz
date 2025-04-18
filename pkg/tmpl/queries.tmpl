@@ -4,11 +4,12 @@ package {{.Settings.Codegen.Out}}
 
 import (
 	"database/sql"
+	"encoding/json"
 	"time"
 
 	"zombiezen.com/go/sqlite"
 
-	{{overrideimport .Catalog}}
+	{{overrideimports .Overrides}}
 )
 
 {{range .Queries}}
@@ -24,6 +25,20 @@ import (
 		{{end}}
 	{{end}}
 {{end}}
+
+func jsonMarshal(v any) []byte {
+	bs, _ := json.Marshal(v)
+	return bs
+}
+
+{{range .Overrides}}
+func jsonUnmarshal{{camel .GoType.Package}}{{.GoType.Type}}(bs []byte) {{.GoType.Package}}.{{.GoType.Type}} {
+	var v {{.GoType.Package}}.{{.GoType.Type}}
+	json.Unmarshal(bs, &v)
+	return v
+}
+{{end}}
+
 
 func timeParse(s string) time.Time {
 	t, _ := time.Parse("2006-01-02 15:04:05", s)

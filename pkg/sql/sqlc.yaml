@@ -11,11 +11,11 @@ sql:
       plugin: zz
       options:
         overrides:
-          - column: contacts.meta
+          - column: contacts.info
             go_type:
               import: github.com/nzoschke/sqlc-gen-zz/pkg/sql
               package: models
-              type: Book
+              type: Info
     engine: "sqlite"
     queries: "query.sql"
     schema: "schema.sql"

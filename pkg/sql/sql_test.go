@@ -23,8 +23,8 @@ func TestCRUD(t *testing.T) {
 
 	c1, err := c.ContactCreate(conn, c.ContactCreateIn{
 		Blob: []byte("b"),
-		Meta: models.Book{
-			Title: "title",
+		Info: models.Info{
+			Age: 21,
 		},
 		Name: "name",
 	})
@@ -34,8 +34,8 @@ func TestCRUD(t *testing.T) {
 		Blob:      []byte("b"),
 		CreatedAt: c1.CreatedAt,
 		Id:        1,
-		Meta: models.Book{
-			Title: "title",
+		Info: models.Info{
+			Age: 21,
 		},
 		Name: "name",
 	}, c1)
@@ -61,8 +61,8 @@ func TestCRUD(t *testing.T) {
 		Blob:      []byte("b"),
 		CreatedAt: at,
 		Id:        1,
-		Meta: models.Book{
-			Title: "title",
+		Info: models.Info{
+			Age: 21,
 		},
 		Name: "new",
 	}, cr)
@@ -81,8 +81,8 @@ func TestCRUD(t *testing.T) {
 			Blob:      []byte("b"),
 			CreatedAt: at,
 			Id:        1,
-			Meta: models.Book{
-				Title: "title",
+			Info: models.Info{
+				Age: 21,
 			},
 			Name: "new",
 		},
@@ -90,7 +90,7 @@ func TestCRUD(t *testing.T) {
 			Blob:      []byte("b"),
 			CreatedAt: c2.CreatedAt,
 			Id:        2,
-			Meta:      models.Book{},
+			Info:      models.Info{},
 			Name:      "name",
 		},
 	}, cs)
@@ -125,7 +125,7 @@ func TestJSONB(t *testing.T) {
 
 	c1, err := c.ContactCreateJSONB(conn, c.ContactCreateJSONBIn{
 		Blob: []byte("{}"),
-		Meta: models.Book{},
+		Info: models.Info{},
 		Name: "name",
 	})
 	a.NoError(err)
@@ -135,7 +135,7 @@ func TestJSONB(t *testing.T) {
 		Blob:      c1.Blob,
 		CreatedAt: c1.CreatedAt,
 		Id:        1,
-		Meta:      models.Book{},
+		Info:      models.Info{},
 		Name:      "name",
 	}, c1)
 
@@ -146,4 +146,8 @@ func TestJSONB(t *testing.T) {
 
 	err = c.ContactDeleteAll(conn)
 	a.NoError(err)
+}
+
+func TestJSON(t *testing.T) {
+
 }

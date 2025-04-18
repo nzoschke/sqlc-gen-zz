@@ -23,9 +23,7 @@ var (
 )
 
 type Options struct {
-	Catalog   *plugin.Catalog
 	Overrides []Override `json:"overrides"`
-	Settings  *plugin.Settings
 }
 
 type GoType struct {
@@ -40,8 +38,10 @@ type Override struct {
 }
 
 type Data struct {
-	Req  *plugin.GenerateRequest
-	Opts Options
+	Catalog   *plugin.Catalog
+	Overrides []Override
+	Queries   []*plugin.Query
+	Settings  *plugin.Settings
 }
 
 func Gen(ctx context.Context, req *plugin.GenerateRequest) (*plugin.GenerateResponse, error) {
@@ -53,27 +53,29 @@ func Gen(ctx context.Context, req *plugin.GenerateRequest) (*plugin.GenerateResp
 		overrides[o.Column] = o.GoType
 	}
 
-	opts.Settings = req.Settings
-	opts.Catalog = req.Catalog
+	data := Data{
+		Catalog:   req.Catalog,
+		Overrides: opts.Overrides,
+		Queries:   req.Queries,
+		Settings:  req.Settings,
+	}
 
 	res := &plugin.GenerateResponse{
 		Files: []*plugin.File{},
 	}
 
 	fm := template.FuncMap{
-		"camel":          strcase.ToCamel,
-		"bindval":        bindval,
-		"dbtype":         dbtype,
-		"gotype":         gotype,
-		"inarg":          inarg,
-		"jsonimport":     jsonimport,
-		"overrideimport": overrideimport,
-		"outarg":         outarg,
-		"lower":          strings.ToLower,
-		"retempty":       retempty,
-		"retval":         retval,
-		"singular":       pl.Singular,
-		"timeimport":     timeimport,
+		"camel":           strcase.ToCamel,
+		"bindval":         bindval,
+		"dbtype":          dbtype,
+		"gotype":          gotype,
+		"inarg":           inarg,
+		"overrideimports": overrideimports,
+		"outarg":          outarg,
+		"lower":           strings.ToLower,
+		"retempty":        retempty,
+		"retval":          retval,
+		"singular":        pl.Singular,
 	}
 
 	t, err := template.New("catalog.tmpl").Funcs(fm).ParseFS(tmpl.Tmpl, "*.tmpl")
@@ -82,7 +84,7 @@ func Gen(ctx context.Context, req *plugin.GenerateRequest) (*plugin.GenerateResp
 	}
 
 	var buf bytes.Buffer
-	if err := t.Execute(&buf, req); err != nil {
+	if err := t.Execute(&buf, data); err != nil {
 		return nil, errors.WithStack(err)
 	}
 
@@ -91,28 +93,13 @@ func Gen(ctx context.Context, req *plugin.GenerateRequest) (*plugin.GenerateResp
 		Name:     "catalog.go",
 	})
 
-	t, err = template.New("json.tmpl").Funcs(fm).ParseFS(tmpl.Tmpl, "*.tmpl")
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
-
-	buf = bytes.Buffer{}
-	if err := t.Execute(&buf, opts); err != nil {
-		return nil, errors.WithStack(err)
-	}
-
-	res.Files = append(res.Files, &plugin.File{
-		Contents: buf.Bytes(),
-		Name:     "json.go",
-	})
-
 	t, err = template.New("queries.tmpl").Funcs(fm).ParseFS(tmpl.Tmpl, "*.tmpl")
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
 
 	buf = bytes.Buffer{}
-	if err := t.Execute(&buf, req); err != nil {
+	if err := t.Execute(&buf, data); err != nil {
 		return nil, errors.WithStack(err)
 	}
 
@@ -121,14 +108,19 @@ func Gen(ctx context.Context, req *plugin.GenerateRequest) (*plugin.GenerateResp
 		Name:     "queries.go",
 	})
 
-	if err := config(req, opts, res); err != nil {
+	if err := config(false, opts, req, res); err != nil {
 		return nil, errors.WithStack(err)
 	}
 
 	return res, nil
 }
 
-func config(req *plugin.GenerateRequest, opts Options, res *plugin.GenerateResponse) error {
+// config generates .json files from the request for debugging purposes
+func config(debug bool, opts Options, req *plugin.GenerateRequest, res *plugin.GenerateResponse) error {
+	if !debug {
+		return nil
+	}
+
 	bs, err := json.MarshalIndent(opts, "", "  ")
 	if err != nil {
 		return errors.WithStack(err)
@@ -224,10 +216,6 @@ func gotype(c *plugin.Column) string {
 		return "time.Time"
 	}
 
-	if strings.HasSuffix(c.Name, "_json") {
-		return "json.RawMessage"
-	}
-
 	// https://sqlite.org/datatype3.html#affinity_name_examples
 	switch strings.ToLower(c.Type.Name) {
 	case "integer":
@@ -296,7 +284,7 @@ func retval(cs []*plugin.Column, i int) string {
 	c := cs[i]
 
 	if g, t := overridetype(c); t != "" {
-		return fmt.Sprintf("unmarshal%s%s([]byte(stmt.ColumnText(%d)))", strcase.ToCamel(g.Package), strcase.ToCamel(g.Type), i)
+		return fmt.Sprintf("jsonUnmarshal%s%s([]byte(stmt.ColumnText(%d)))", strcase.ToCamel(g.Package), strcase.ToCamel(g.Type), i)
 	}
 
 	switch gotype(c) {
@@ -311,32 +299,17 @@ func retval(cs []*plugin.Column, i int) string {
 	}
 }
 
-func jsonimport(c *plugin.Catalog) string {
-	for _, s := range c.Schemas {
-		for _, t := range s.Tables {
-			for _, c := range t.Columns {
-				if gotype(c) == "json.RawMessage" {
-					return `"encoding/json"`
-				}
-			}
-		}
-	}
-	return ""
-}
+func overrideimports(os []Override) string {
+	pkgs := map[string]struct{}{}
 
-func overrideimport(c *plugin.Catalog) string {
-	return `"github.com/nzoschke/sqlc-gen-zz/pkg/sql/models"`
-}
-
-func timeimport(c *plugin.Catalog) string {
-	for _, s := range c.Schemas {
-		for _, t := range s.Tables {
-			for _, c := range t.Columns {
-				if gotype(c) == "time.Time" {
-					return `"time"`
-				}
-			}
-		}
+	for _, o := range os {
+		pkgs[fmt.Sprintf("%s/%s", o.GoType.Import, o.GoType.Package)] = struct{}{}
 	}
-	return ""
+
+	ps := []string{}
+	for p := range pkgs {
+		ps = append(ps, fmt.Sprintf("\"%s\"", p))
+	}
+
+	return strings.Join(ps, "\n")
 }
