@@ -67,7 +67,14 @@ type ContactReadOut struct {
 }
 
 func ContactRead(tx *sqlite.Conn, id int64) (*ContactReadOut, error) {
-	stmt := tx.Prep(`SELECT blob, created_at, id, info, name FROM contacts WHERE id = ? LIMIT 1`)
+	stmt := tx.Prep(`SELECT
+  blob, created_at, id, info, name
+FROM
+  contacts
+WHERE
+  id = ?
+LIMIT
+  1`)
 	defer stmt.Reset()
 
 	stmt.BindInt64(1, id)
@@ -96,7 +103,10 @@ type ContactCountOut struct {
 }
 
 func ContactCount(tx *sqlite.Conn) (int64, error) {
-	stmt := tx.Prep(`SELECT COUNT(*) FROM contacts`)
+	stmt := tx.Prep(`SELECT
+  COUNT(*)
+FROM
+  contacts`)
 	defer stmt.Reset()
 
 	ok, err := stmt.Step()
