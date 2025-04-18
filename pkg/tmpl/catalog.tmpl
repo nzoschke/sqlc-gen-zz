@@ -3,7 +3,10 @@
 package {{.Settings.Codegen.Out}}
 
 import (
+	{{jsonimport .Catalog}}
 	{{timeimport .Catalog}}
+
+	{{overrideimport .Catalog}}
 )
 
 {{range .Catalog.Schemas}}

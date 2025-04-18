@@ -4,9 +4,12 @@ package {{.Settings.Codegen.Out}}
 
 import (
 	"database/sql"
-	{{timeimport .Catalog}}
+	"time"
+	"encoding/json"
 
 	"zombiezen.com/go/sqlite"
+
+	{{overrideimport .Catalog}}
 )
 
 {{range .Queries}}
@@ -22,6 +25,18 @@ import (
 		{{end}}
 	{{end}}
 {{end}}
+
+func jsonMarshal(v any) []byte {
+	bs, _ := json.Marshal(v)
+	return bs
+}
+
+func unmarshalBook(bs []byte) models.Book {
+	var v models.Book
+	json.Unmarshal(bs, &v)
+	return v
+}
+
 
 func timeParse(s string) time.Time {
 	t, _ := time.Parse("2006-01-02 15:04:05", s)

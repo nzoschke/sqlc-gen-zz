@@ -4,12 +4,14 @@ package c
 
 import (
 	"time"
+
+	"github.com/nzoschke/sqlc-gen-zz/pkg/sql/models"
 )
 
 type Contact struct {
-	Blob      []byte    `json:"blob"`
-	CreatedAt time.Time `json:"created_at"`
-	Id        int64     `json:"id"`
-	MetaJson  []byte    `json:"meta_json"`
-	Name      string    `json:"name"`
+	Blob      []byte      `json:"blob"`
+	CreatedAt time.Time   `json:"created_at"`
+	Id        int64       `json:"id"`
+	Meta      models.Book `json:"meta"`
+	Name      string      `json:"name"`
 }

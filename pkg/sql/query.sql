@@ -1,6 +1,6 @@
 -- name: ContactCreate :one
 INSERT INTO
-  contacts (blob, meta_json, name)
+  contacts (blob, meta, name)
 VALUES
   (?, ?, ?)
 RETURNING
@@ -49,9 +49,9 @@ DELETE FROM
 
 -- name: ContactCreateJSONB :one
 INSERT INTO
-  contacts (blob, meta_json, name)
+  contacts (blob, meta, name)
 VALUES
-  (JSONB(:blob), :meta_json, :name) -- JSONB requires functional named param
+  (JSONB(:blob), :meta, :name) -- JSONB requires functional named param
 RETURNING
   JSON(blob),  -- and requires functional return param in position 1
   *;

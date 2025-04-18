@@ -6,6 +6,7 @@ import (
 
 	"github.com/nzoschke/sqlc-gen-zz/pkg/db"
 	"github.com/nzoschke/sqlc-gen-zz/pkg/sql/c"
+	"github.com/nzoschke/sqlc-gen-zz/pkg/sql/models"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -21,9 +22,11 @@ func TestCRUD(t *testing.T) {
 	defer put()
 
 	c1, err := c.ContactCreate(conn, c.ContactCreateIn{
-		Blob:     []byte("b"),
-		MetaJson: []byte{},
-		Name:     "name",
+		Blob: []byte("b"),
+		Meta: models.Book{
+			Title: "title",
+		},
+		Name: "name",
 	})
 	a.NoError(err)
 
@@ -31,8 +34,10 @@ func TestCRUD(t *testing.T) {
 		Blob:      []byte("b"),
 		CreatedAt: c1.CreatedAt,
 		Id:        1,
-		MetaJson:  []byte{},
-		Name:      "name",
+		Meta: models.Book{
+			Title: "title",
+		},
+		Name: "name",
 	}, c1)
 
 	a.Equal(time.Now().UTC().Format("2006-01-02"), c1.CreatedAt.Format("2006-01-02"))
@@ -56,8 +61,10 @@ func TestCRUD(t *testing.T) {
 		Blob:      []byte("b"),
 		CreatedAt: at,
 		Id:        1,
-		MetaJson:  []byte{},
-		Name:      "new",
+		Meta: models.Book{
+			Title: "title",
+		},
+		Name: "new",
 	}, cr)
 
 	c2, err := c.ContactCreate(conn, c.ContactCreateIn{
@@ -74,14 +81,16 @@ func TestCRUD(t *testing.T) {
 			Blob:      []byte("b"),
 			CreatedAt: at,
 			Id:        1,
-			MetaJson:  []byte{},
-			Name:      "new",
+			Meta: models.Book{
+				Title: "title",
+			},
+			Name: "new",
 		},
 		{
 			Blob:      []byte("b"),
 			CreatedAt: c2.CreatedAt,
 			Id:        2,
-			MetaJson:  []byte{},
+			Meta:      models.Book{},
 			Name:      "name",
 		},
 	}, cs)
@@ -115,9 +124,9 @@ func TestJSONB(t *testing.T) {
 	defer put()
 
 	c1, err := c.ContactCreateJSONB(conn, c.ContactCreateJSONBIn{
-		Blob:     []byte("{}"),
-		MetaJson: []byte{},
-		Name:     "name",
+		Blob: []byte("{}"),
+		Meta: models.Book{},
+		Name: "name",
 	})
 	a.NoError(err)
 
@@ -126,7 +135,7 @@ func TestJSONB(t *testing.T) {
 		Blob:      c1.Blob,
 		CreatedAt: c1.CreatedAt,
 		Id:        1,
-		MetaJson:  []byte{},
+		Meta:      models.Book{},
 		Name:      "name",
 	}, c1)
 

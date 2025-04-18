@@ -3,8 +3,8 @@ package gen
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
-	"log/slog"
 	"strings"
 	"text/template"
 
@@ -13,29 +13,50 @@ import (
 	"github.com/nzoschke/sqlc-gen-zz/pkg/tmpl"
 	"github.com/olekukonko/errors"
 	"github.com/sqlc-dev/plugin-sdk-go/plugin"
+	"google.golang.org/protobuf/encoding/protojson"
 )
 
 var pl = pluralize.NewClient()
 
-func Gen(ctx context.Context, req *plugin.GenerateRequest) (*plugin.GenerateResponse, error) {
-	slog.Info("gen", "req", req)
+type Options struct {
+	Overrides []Override `json:"overrides"`
+}
 
-	fm := template.FuncMap{
-		"camel":      strcase.ToCamel,
-		"bindval":    bindval,
-		"dbtype":     dbtype,
-		"gotype":     gotype,
-		"inarg":      inarg,
-		"outarg":     outarg,
-		"lower":      strings.ToLower,
-		"retempty":   retempty,
-		"retval":     retval,
-		"singular":   pl.Singular,
-		"timeimport": timeimport,
+type GoType struct {
+	Import  string `json:"import"`
+	Package string `json:"package"`
+	Type    string `json:"type"`
+}
+
+type Override struct {
+	Column string `json:"column" yaml:"column"`
+	GoType GoType `json:"go_type" yaml:"go_type"`
+}
+
+func Gen(ctx context.Context, req *plugin.GenerateRequest) (*plugin.GenerateResponse, error) {
+	opts := Options{}
+	if err := json.Unmarshal(req.PluginOptions, &opts); err != nil {
+		return nil, errors.WithStack(err)
 	}
 
 	res := &plugin.GenerateResponse{
 		Files: []*plugin.File{},
+	}
+
+	fm := template.FuncMap{
+		"camel":          strcase.ToCamel,
+		"bindval":        bindval,
+		"dbtype":         dbtype,
+		"gotype":         gotype,
+		"inarg":          inarg,
+		"jsonimport":     jsonimport,
+		"overrideimport": overrideimport,
+		"outarg":         outarg,
+		"lower":          strings.ToLower,
+		"retempty":       retempty,
+		"retval":         retval,
+		"singular":       pl.Singular,
+		"timeimport":     timeimport,
 	}
 
 	t, err := template.New("catalog.tmpl").Funcs(fm).ParseFS(tmpl.Tmpl, "*.tmpl")
@@ -68,7 +89,46 @@ func Gen(ctx context.Context, req *plugin.GenerateRequest) (*plugin.GenerateResp
 		Name:     "queries.go",
 	})
 
+	if err := config(req, opts, res); err != nil {
+		return nil, errors.WithStack(err)
+	}
+
 	return res, nil
+}
+
+func config(req *plugin.GenerateRequest, opts Options, res *plugin.GenerateResponse) error {
+	bs, err := json.MarshalIndent(opts, "", "  ")
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	res.Files = append(res.Files, &plugin.File{
+		Contents: bs,
+		Name:     "opts.json",
+	})
+
+	m := &protojson.MarshalOptions{
+		EmitUnpopulated: true,
+		Indent:          "",
+		UseProtoNames:   true,
+	}
+	data, err := m.Marshal(req)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	var rm json.RawMessage = data
+	bs, err = json.MarshalIndent(rm, "", "  ")
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	res.Files = append(res.Files, &plugin.File{
+		Contents: bs,
+		Name:     "req.json",
+	})
+
+	return nil
 }
 
 func bindval(ps []*plugin.Parameter, i int32) string {
@@ -76,6 +136,8 @@ func bindval(ps []*plugin.Parameter, i int32) string {
 
 	cast := func(v string) string {
 		switch gotype(p.Column) {
+		case "models.Book":
+			return fmt.Sprintf(`jsonMarshal(%s)`, v)
 		case "time.Time":
 			return fmt.Sprintf(`%s.Format("2006-01-02 15:04:05")`, v)
 		default:
@@ -107,8 +169,16 @@ func dbtype(t string) string {
 }
 
 func gotype(c *plugin.Column) string {
+	if c.Name == "meta" {
+		return "models.Book"
+	}
+
 	if strings.HasSuffix(c.Name, "_at") {
 		return "time.Time"
+	}
+
+	if strings.HasSuffix(c.Name, "_json") {
+		return "json.RawMessage"
 	}
 
 	// https://sqlite.org/datatype3.html#affinity_name_examples
@@ -179,13 +249,34 @@ func retval(cs []*plugin.Column, i int) string {
 	c := cs[i]
 
 	switch gotype(c) {
+	case "models.Book":
+		return fmt.Sprintf("unmarshalBook([]byte(stmt.ColumnText(%d)))", i)
 	case "[]byte":
+		return fmt.Sprintf("[]byte(stmt.ColumnText(%d))", i)
+	case "json.RawMessage":
 		return fmt.Sprintf("[]byte(stmt.ColumnText(%d))", i)
 	case "time.Time":
 		return fmt.Sprintf("timeParse(stmt.ColumnText(%d))", i)
 	default:
 		return fmt.Sprintf("stmt.Column%s(%d)", dbtype(c.Type.Name), i)
 	}
+}
+
+func jsonimport(c *plugin.Catalog) string {
+	for _, s := range c.Schemas {
+		for _, t := range s.Tables {
+			for _, c := range t.Columns {
+				if gotype(c) == "json.RawMessage" {
+					return `"encoding/json"`
+				}
+			}
+		}
+	}
+	return ""
+}
+
+func overrideimport(c *plugin.Catalog) string {
+	return `"github.com/nzoschke/sqlc-gen-zz/pkg/sql/models"`
 }
 
 func timeimport(c *plugin.Catalog) string {
