@@ -17,7 +17,6 @@ import (
 )
 
 var (
-	opts      = Options{}
 	overrides = map[string]GoType{}
 	pl        = pluralize.NewClient()
 )
@@ -45,6 +44,7 @@ type Data struct {
 }
 
 func Gen(ctx context.Context, req *plugin.GenerateRequest) (*plugin.GenerateResponse, error) {
+	opts := Options{}
 	if err := json.Unmarshal(req.PluginOptions, &opts); err != nil {
 		return nil, errors.WithStack(err)
 	}
@@ -65,17 +65,17 @@ func Gen(ctx context.Context, req *plugin.GenerateRequest) (*plugin.GenerateResp
 	}
 
 	fm := template.FuncMap{
-		"camel":           strcase.ToCamel,
-		"bindval":         bindval,
-		"dbtype":          dbtype,
-		"gotype":          gotype,
-		"inarg":           inarg,
-		"overrideimports": overrideimports,
-		"outarg":          outarg,
-		"lower":           strings.ToLower,
-		"retempty":        retempty,
-		"retval":          retval,
-		"singular":        pl.Singular,
+		"camel":    strcase.ToCamel,
+		"bindval":  bindval,
+		"dbtype":   dbtype,
+		"gotype":   gotype,
+		"imports":  imports,
+		"inarg":    inarg,
+		"outarg":   outarg,
+		"lower":    strings.ToLower,
+		"retempty": retempty,
+		"retval":   retval,
+		"singular": pl.Singular,
 	}
 
 	t, err := template.New("catalog.tmpl").Funcs(fm).ParseFS(tmpl.Tmpl, "*.tmpl")
@@ -229,6 +229,21 @@ func gotype(c *plugin.Column) string {
 	}
 }
 
+func imports(os []Override) string {
+	pkgs := map[string]struct{}{}
+
+	for _, o := range os {
+		pkgs[fmt.Sprintf("%s/%s", o.GoType.Import, o.GoType.Package)] = struct{}{}
+	}
+
+	ps := []string{}
+	for p := range pkgs {
+		ps = append(ps, fmt.Sprintf("\"%s\"", p))
+	}
+
+	return strings.Join(ps, "\n")
+}
+
 func inarg(name string, ps []*plugin.Parameter) string {
 	switch len(ps) {
 	case 0:
@@ -297,19 +312,4 @@ func retval(cs []*plugin.Column, i int) string {
 	default:
 		return fmt.Sprintf("stmt.Column%s(%d)", dbtype(c.Type.Name), i)
 	}
-}
-
-func overrideimports(os []Override) string {
-	pkgs := map[string]struct{}{}
-
-	for _, o := range os {
-		pkgs[fmt.Sprintf("%s/%s", o.GoType.Import, o.GoType.Package)] = struct{}{}
-	}
-
-	ps := []string{}
-	for p := range pkgs {
-		ps = append(ps, fmt.Sprintf("\"%s\"", p))
-	}
-
-	return strings.Join(ps, "\n")
 }
