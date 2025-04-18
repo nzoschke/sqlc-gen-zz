@@ -6,9 +6,16 @@ plugins:
       cmd: sqlc-gen-zz
 
 sql:
-  - engine: "sqlite"
-    queries: "query.sql"
-    schema: "schema.sql"
-    codegen:
+  - codegen:
       - out: c
         plugin: zz
+        options:
+          overrides:
+            - column: contacts.info
+              go_type:
+                import: github.com/nzoschke/sqlc-gen-zz/pkg/sql
+                package: models
+                type: Info
+    engine: "sqlite"
+    queries: "query.sql"
+    schema: "schema.sql"

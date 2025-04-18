@@ -1,16 +1,26 @@
 -- name: ContactCreate :one
 INSERT INTO
-  contacts (blob, name)
+  contacts (blob, info, name)
 VALUES
-  (?, ?)
+  (?, ?, ?)
 RETURNING
   *;
 
 -- name: ContactRead :one
-SELECT * FROM contacts WHERE id = ? LIMIT 1;
+SELECT
+  *
+FROM
+  contacts
+WHERE
+  id = ?
+LIMIT
+  1;
 
 -- name: ContactCount :one
-SELECT COUNT(*) FROM contacts;
+SELECT
+  COUNT(*)
+FROM
+  contacts;
 
 -- name: ContactList :many
 SELECT
@@ -49,9 +59,9 @@ DELETE FROM
 
 -- name: ContactCreateJSONB :one
 INSERT INTO
-  contacts (blob, name)
+  contacts (blob, info, name)
 VALUES
-  (JSONB(:blob), :name) -- JSONB requires functional named param
+  (JSONB(:blob), :info, :name) -- JSONB requires functional named param
 RETURNING
   JSON(blob),  -- and requires functional return param in position 1
   *;
@@ -59,6 +69,16 @@ RETURNING
 -- name: ContactReadJSONB :one
 SELECT
   JSON(blob) AS blob
+FROM
+  contacts
+WHERE
+  id = ?
+LIMIT
+  1;
+
+-- name: ContactReadInfo :one
+SELECT
+  info
 FROM
   contacts
 WHERE

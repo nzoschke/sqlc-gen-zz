@@ -4,34 +4,40 @@ package c
 
 import (
 	"database/sql"
+	"encoding/json"
 	"time"
 
 	"zombiezen.com/go/sqlite"
+
+	"github.com/nzoschke/sqlc-gen-zz/pkg/sql/models"
 )
 
 type ContactCreateIn struct {
-	Blob []byte `json:"blob"`
-	Name string `json:"name"`
+	Blob []byte      `json:"blob"`
+	Info models.Info `json:"info"`
+	Name string      `json:"name"`
 }
 
 type ContactCreateOut struct {
-	Blob      []byte    `json:"blob"`
-	CreatedAt time.Time `json:"created_at"`
-	Id        int64     `json:"id"`
-	Name      string    `json:"name"`
+	Blob      []byte      `json:"blob"`
+	CreatedAt time.Time   `json:"created_at"`
+	Id        int64       `json:"id"`
+	Info      models.Info `json:"info"`
+	Name      string      `json:"name"`
 }
 
 func ContactCreate(tx *sqlite.Conn, in ContactCreateIn) (*ContactCreateOut, error) {
 	stmt := tx.Prep(`INSERT INTO
-  contacts (blob, name)
+  contacts (blob, info, name)
 VALUES
-  (?, ?)
+  (?, ?, ?)
 RETURNING
-  blob, created_at, id, name`)
+  blob, created_at, id, info, name`)
 	defer stmt.Reset()
 
 	stmt.BindBytes(1, in.Blob)
-	stmt.BindText(2, in.Name)
+	stmt.BindBytes(2, jsonMarshal(in.Info))
+	stmt.BindText(3, in.Name)
 
 	ok, err := stmt.Step()
 	if err != nil {
@@ -45,21 +51,30 @@ RETURNING
 	out.Blob = []byte(stmt.ColumnText(0))
 	out.CreatedAt = timeParse(stmt.ColumnText(1))
 	out.Id = stmt.ColumnInt64(2)
-	out.Name = stmt.ColumnText(3)
+	out.Info = jsonUnmarshalModelsInfo([]byte(stmt.ColumnText(3)))
+	out.Name = stmt.ColumnText(4)
 
 	return &out, nil
 
 }
 
 type ContactReadOut struct {
-	Blob      []byte    `json:"blob"`
-	CreatedAt time.Time `json:"created_at"`
-	Id        int64     `json:"id"`
-	Name      string    `json:"name"`
+	Blob      []byte      `json:"blob"`
+	CreatedAt time.Time   `json:"created_at"`
+	Id        int64       `json:"id"`
+	Info      models.Info `json:"info"`
+	Name      string      `json:"name"`
 }
 
 func ContactRead(tx *sqlite.Conn, id int64) (*ContactReadOut, error) {
-	stmt := tx.Prep(`SELECT blob, created_at, id, name FROM contacts WHERE id = ? LIMIT 1`)
+	stmt := tx.Prep(`SELECT
+  blob, created_at, id, info, name
+FROM
+  contacts
+WHERE
+  id = ?
+LIMIT
+  1`)
 	defer stmt.Reset()
 
 	stmt.BindInt64(1, id)
@@ -76,7 +91,8 @@ func ContactRead(tx *sqlite.Conn, id int64) (*ContactReadOut, error) {
 	out.Blob = []byte(stmt.ColumnText(0))
 	out.CreatedAt = timeParse(stmt.ColumnText(1))
 	out.Id = stmt.ColumnInt64(2)
-	out.Name = stmt.ColumnText(3)
+	out.Info = jsonUnmarshalModelsInfo([]byte(stmt.ColumnText(3)))
+	out.Name = stmt.ColumnText(4)
 
 	return &out, nil
 
@@ -87,7 +103,10 @@ type ContactCountOut struct {
 }
 
 func ContactCount(tx *sqlite.Conn) (int64, error) {
-	stmt := tx.Prep(`SELECT COUNT(*) FROM contacts`)
+	stmt := tx.Prep(`SELECT
+  COUNT(*)
+FROM
+  contacts`)
 	defer stmt.Reset()
 
 	ok, err := stmt.Step()
@@ -105,15 +124,16 @@ func ContactCount(tx *sqlite.Conn) (int64, error) {
 type ContactListOut []ContactListRow
 
 type ContactListRow struct {
-	Blob      []byte    `json:"blob"`
-	CreatedAt time.Time `json:"created_at"`
-	Id        int64     `json:"id"`
-	Name      string    `json:"name"`
+	Blob      []byte      `json:"blob"`
+	CreatedAt time.Time   `json:"created_at"`
+	Id        int64       `json:"id"`
+	Info      models.Info `json:"info"`
+	Name      string      `json:"name"`
 }
 
 func ContactList(tx *sqlite.Conn, limit int64) (ContactListOut, error) {
 	stmt := tx.Prep(`SELECT
-  blob, created_at, id, name
+  blob, created_at, id, info, name
 FROM
   contacts
 LIMIT
@@ -136,7 +156,8 @@ LIMIT
 		row.Blob = []byte(stmt.ColumnText(0))
 		row.CreatedAt = timeParse(stmt.ColumnText(1))
 		row.Id = stmt.ColumnInt64(2)
-		row.Name = stmt.ColumnText(3)
+		row.Info = jsonUnmarshalModelsInfo([]byte(stmt.ColumnText(3)))
+		row.Name = stmt.ColumnText(4)
 
 		out = append(out, row)
 	}
@@ -232,30 +253,33 @@ func ContactDeleteAll(tx *sqlite.Conn) error {
 }
 
 type ContactCreateJSONBIn struct {
-	Blob []byte `json:"blob"`
-	Name string `json:"name"`
+	Blob []byte      `json:"blob"`
+	Info models.Info `json:"info"`
+	Name string      `json:"name"`
 }
 
 type ContactCreateJSONBOut struct {
-	Json      []byte    `json:"json"`
-	Blob      []byte    `json:"blob"`
-	CreatedAt time.Time `json:"created_at"`
-	Id        int64     `json:"id"`
-	Name      string    `json:"name"`
+	Json      []byte      `json:"json"`
+	Blob      []byte      `json:"blob"`
+	CreatedAt time.Time   `json:"created_at"`
+	Id        int64       `json:"id"`
+	Info      models.Info `json:"info"`
+	Name      string      `json:"name"`
 }
 
 func ContactCreateJSONB(tx *sqlite.Conn, in ContactCreateJSONBIn) (*ContactCreateJSONBOut, error) {
 	stmt := tx.Prep(`INSERT INTO
-  contacts (blob, name)
+  contacts (blob, info, name)
 VALUES
-  (JSONB(?1), ?2) -- JSONB requires functional named param
+  (JSONB(?1), ?2, ?3) -- JSONB requires functional named param
 RETURNING
   JSON(blob),  -- and requires functional return param in position 1
-  blob, created_at, id, name`)
+  blob, created_at, id, info, name`)
 	defer stmt.Reset()
 
 	stmt.BindBytes(1, in.Blob)
-	stmt.BindText(2, in.Name)
+	stmt.BindBytes(2, jsonMarshal(in.Info))
+	stmt.BindText(3, in.Name)
 
 	ok, err := stmt.Step()
 	if err != nil {
@@ -270,7 +294,8 @@ RETURNING
 	out.Blob = []byte(stmt.ColumnText(1))
 	out.CreatedAt = timeParse(stmt.ColumnText(2))
 	out.Id = stmt.ColumnInt64(3)
-	out.Name = stmt.ColumnText(4)
+	out.Info = jsonUnmarshalModelsInfo([]byte(stmt.ColumnText(4)))
+	out.Name = stmt.ColumnText(5)
 
 	return &out, nil
 
@@ -303,6 +328,46 @@ LIMIT
 
 	return []byte(stmt.ColumnText(0)), nil
 
+}
+
+type ContactReadInfoOut struct {
+	Info models.Info `json:"info"`
+}
+
+func ContactReadInfo(tx *sqlite.Conn, id int64) (models.Info, error) {
+	stmt := tx.Prep(`SELECT
+  info
+FROM
+  contacts
+WHERE
+  id = ?
+LIMIT
+  1`)
+	defer stmt.Reset()
+
+	stmt.BindInt64(1, id)
+
+	ok, err := stmt.Step()
+	if err != nil {
+		return models.Info{}, err
+	}
+	if !ok {
+		return models.Info{}, sql.ErrNoRows
+	}
+
+	return jsonUnmarshalModelsInfo([]byte(stmt.ColumnText(0))), nil
+
+}
+
+func jsonMarshal(v any) []byte {
+	bs, _ := json.Marshal(v)
+	return bs
+}
+
+func jsonUnmarshalModelsInfo(bs []byte) models.Info {
+	var v models.Info
+	json.Unmarshal(bs, &v)
+	return v
 }
 
 func timeParse(s string) time.Time {

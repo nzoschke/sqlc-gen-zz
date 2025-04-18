@@ -6,6 +6,7 @@ import (
 
 	"github.com/nzoschke/sqlc-gen-zz/pkg/db"
 	"github.com/nzoschke/sqlc-gen-zz/pkg/sql/c"
+	"github.com/nzoschke/sqlc-gen-zz/pkg/sql/models"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -22,6 +23,9 @@ func TestCRUD(t *testing.T) {
 
 	c1, err := c.ContactCreate(conn, c.ContactCreateIn{
 		Blob: []byte("b"),
+		Info: models.Info{
+			Age: 21,
+		},
 		Name: "name",
 	})
 	a.NoError(err)
@@ -30,7 +34,10 @@ func TestCRUD(t *testing.T) {
 		Blob:      []byte("b"),
 		CreatedAt: c1.CreatedAt,
 		Id:        1,
-		Name:      "name",
+		Info: models.Info{
+			Age: 21,
+		},
+		Name: "name",
 	}, c1)
 
 	a.Equal(time.Now().UTC().Format("2006-01-02"), c1.CreatedAt.Format("2006-01-02"))
@@ -54,7 +61,10 @@ func TestCRUD(t *testing.T) {
 		Blob:      []byte("b"),
 		CreatedAt: at,
 		Id:        1,
-		Name:      "new",
+		Info: models.Info{
+			Age: 21,
+		},
+		Name: "new",
 	}, cr)
 
 	c2, err := c.ContactCreate(conn, c.ContactCreateIn{
@@ -71,12 +81,16 @@ func TestCRUD(t *testing.T) {
 			Blob:      []byte("b"),
 			CreatedAt: at,
 			Id:        1,
-			Name:      "new",
+			Info: models.Info{
+				Age: 21,
+			},
+			Name: "new",
 		},
 		{
 			Blob:      []byte("b"),
 			CreatedAt: c2.CreatedAt,
 			Id:        2,
+			Info:      models.Info{},
 			Name:      "name",
 		},
 	}, cs)
@@ -111,6 +125,7 @@ func TestJSONB(t *testing.T) {
 
 	c1, err := c.ContactCreateJSONB(conn, c.ContactCreateJSONBIn{
 		Blob: []byte("{}"),
+		Info: models.Info{},
 		Name: "name",
 	})
 	a.NoError(err)
@@ -120,6 +135,7 @@ func TestJSONB(t *testing.T) {
 		Blob:      c1.Blob,
 		CreatedAt: c1.CreatedAt,
 		Id:        1,
+		Info:      models.Info{},
 		Name:      "name",
 	}, c1)
 

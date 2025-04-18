@@ -3,7 +3,9 @@
 package {{.Settings.Codegen.Out}}
 
 import (
-	{{timeimport .Catalog}}
+	"time"
+
+	{{imports .Overrides}}
 )
 
 {{range .Catalog.Schemas}}
@@ -15,3 +17,7 @@ type {{singular (camel .Rel.Name)}} struct {
 }
   {{end}}
 {{end}}
+
+func catalogImports() {
+	_ = time.Time{}
+}
