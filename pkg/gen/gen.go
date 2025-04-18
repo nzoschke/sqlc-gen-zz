@@ -233,12 +233,12 @@ func imports(os []Override) string {
 	pkgs := map[string]struct{}{}
 
 	for _, o := range os {
-		pkgs[fmt.Sprintf("%s/%s", o.GoType.Import, o.GoType.Package)] = struct{}{}
+		pkgs[fmt.Sprintf("\"%s/%s\"", o.GoType.Import, o.GoType.Package)] = struct{}{}
 	}
 
 	ps := []string{}
 	for p := range pkgs {
-		ps = append(ps, fmt.Sprintf("\"%s\"", p))
+		ps = append(ps, p)
 	}
 
 	return strings.Join(ps, "\n")
