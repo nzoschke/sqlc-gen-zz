@@ -330,6 +330,35 @@ LIMIT
 
 }
 
+type ContactReadInfoOut struct {
+	Info models.Info `json:"info"`
+}
+
+func ContactReadInfo(tx *sqlite.Conn, id int64) (models.Info, error) {
+	stmt := tx.Prep(`SELECT
+  info
+FROM
+  contacts
+WHERE
+  id = ?
+LIMIT
+  1`)
+	defer stmt.Reset()
+
+	stmt.BindInt64(1, id)
+
+	ok, err := stmt.Step()
+	if err != nil {
+		return models.Info{}, err
+	}
+	if !ok {
+		return models.Info{}, sql.ErrNoRows
+	}
+
+	return jsonUnmarshalModelsInfo([]byte(stmt.ColumnText(0))), nil
+
+}
+
 func jsonMarshal(v any) []byte {
 	bs, _ := json.Marshal(v)
 	return bs

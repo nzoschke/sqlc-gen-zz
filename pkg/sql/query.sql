@@ -75,3 +75,13 @@ WHERE
   id = ?
 LIMIT
   1;
+
+-- name: ContactReadInfo :one
+SELECT
+  info
+FROM
+  contacts
+WHERE
+  id = ?
+LIMIT
+  1;

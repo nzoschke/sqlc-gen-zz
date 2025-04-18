@@ -278,6 +278,10 @@ func retempty(name string, cs []*plugin.Column) string {
 		return ""
 	case 1:
 		c := cs[0]
+		if g, t := overridetype(c); t != "" {
+			return fmt.Sprintf("%s.%s{}", g.Package, g.Type)
+		}
+
 		switch gotype(c) {
 		case "[]byte":
 			return "nil"
