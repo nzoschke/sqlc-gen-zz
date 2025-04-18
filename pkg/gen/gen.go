@@ -16,7 +16,11 @@ import (
 	"google.golang.org/protobuf/encoding/protojson"
 )
 
-var pl = pluralize.NewClient()
+var (
+	opts      = Options{}
+	overrides = map[string]GoType{}
+	pl        = pluralize.NewClient()
+)
 
 type Options struct {
 	Overrides []Override `json:"overrides"`
@@ -29,14 +33,17 @@ type GoType struct {
 }
 
 type Override struct {
-	Column string `json:"column" yaml:"column"`
-	GoType GoType `json:"go_type" yaml:"go_type"`
+	Column string `json:"column"`
+	GoType GoType `json:"go_type"`
 }
 
 func Gen(ctx context.Context, req *plugin.GenerateRequest) (*plugin.GenerateResponse, error) {
-	opts := Options{}
 	if err := json.Unmarshal(req.PluginOptions, &opts); err != nil {
 		return nil, errors.WithStack(err)
+	}
+
+	for _, o := range opts.Overrides {
+		overrides[o.Column] = o.GoType
 	}
 
 	res := &plugin.GenerateResponse{
@@ -135,9 +142,11 @@ func bindval(ps []*plugin.Parameter, i int32) string {
 	p := ps[i-1]
 
 	cast := func(v string) string {
-		switch gotype(p.Column) {
-		case "models.Book":
+		if _, t := overridetype(p.Column); t != "" {
 			return fmt.Sprintf(`jsonMarshal(%s)`, v)
+		}
+
+		switch gotype(p.Column) {
 		case "time.Time":
 			return fmt.Sprintf(`%s.Format("2006-01-02 15:04:05")`, v)
 		default:
@@ -168,9 +177,22 @@ func dbtype(t string) string {
 	}
 }
 
+func overridetype(c *plugin.Column) (GoType, string) {
+	if c.Table == nil {
+		return GoType{}, ""
+	}
+
+	t, ok := overrides[fmt.Sprintf("%s.%s", c.Table.Name, c.Name)]
+	if !ok {
+		return GoType{}, ""
+	}
+
+	return t, fmt.Sprintf("%s.%s", t.Package, t.Type)
+}
+
 func gotype(c *plugin.Column) string {
-	if c.Name == "meta" {
-		return "models.Book"
+	if _, t := overridetype(c); t != "" {
+		return t
 	}
 
 	if strings.HasSuffix(c.Name, "_at") {
@@ -248,9 +270,11 @@ func retempty(name string, cs []*plugin.Column) string {
 func retval(cs []*plugin.Column, i int) string {
 	c := cs[i]
 
+	if g, t := overridetype(c); t != "" {
+		return fmt.Sprintf("unmarshal%s%s([]byte(stmt.ColumnText(%d)))", strcase.ToCamel(g.Package), strcase.ToCamel(g.Type), i)
+	}
+
 	switch gotype(c) {
-	case "models.Book":
-		return fmt.Sprintf("unmarshalBook([]byte(stmt.ColumnText(%d)))", i)
 	case "[]byte":
 		return fmt.Sprintf("[]byte(stmt.ColumnText(%d))", i)
 	case "json.RawMessage":

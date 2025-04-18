@@ -31,7 +31,7 @@ func jsonMarshal(v any) []byte {
 	return bs
 }
 
-func unmarshalBook(bs []byte) models.Book {
+func unmarshalModelsBook(bs []byte) models.Book {
 	var v models.Book
 	json.Unmarshal(bs, &v)
 	return v

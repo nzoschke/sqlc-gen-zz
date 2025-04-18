@@ -51,7 +51,7 @@ RETURNING
 	out.Blob = []byte(stmt.ColumnText(0))
 	out.CreatedAt = timeParse(stmt.ColumnText(1))
 	out.Id = stmt.ColumnInt64(2)
-	out.Meta = unmarshalBook([]byte(stmt.ColumnText(3)))
+	out.Meta = unmarshalModelsBook([]byte(stmt.ColumnText(3)))
 	out.Name = stmt.ColumnText(4)
 
 	return &out, nil
@@ -84,7 +84,7 @@ func ContactRead(tx *sqlite.Conn, id int64) (*ContactReadOut, error) {
 	out.Blob = []byte(stmt.ColumnText(0))
 	out.CreatedAt = timeParse(stmt.ColumnText(1))
 	out.Id = stmt.ColumnInt64(2)
-	out.Meta = unmarshalBook([]byte(stmt.ColumnText(3)))
+	out.Meta = unmarshalModelsBook([]byte(stmt.ColumnText(3)))
 	out.Name = stmt.ColumnText(4)
 
 	return &out, nil
@@ -146,7 +146,7 @@ LIMIT
 		row.Blob = []byte(stmt.ColumnText(0))
 		row.CreatedAt = timeParse(stmt.ColumnText(1))
 		row.Id = stmt.ColumnInt64(2)
-		row.Meta = unmarshalBook([]byte(stmt.ColumnText(3)))
+		row.Meta = unmarshalModelsBook([]byte(stmt.ColumnText(3)))
 		row.Name = stmt.ColumnText(4)
 
 		out = append(out, row)
@@ -284,7 +284,7 @@ RETURNING
 	out.Blob = []byte(stmt.ColumnText(1))
 	out.CreatedAt = timeParse(stmt.ColumnText(2))
 	out.Id = stmt.ColumnInt64(3)
-	out.Meta = unmarshalBook([]byte(stmt.ColumnText(4)))
+	out.Meta = unmarshalModelsBook([]byte(stmt.ColumnText(4)))
 	out.Name = stmt.ColumnText(5)
 
 	return &out, nil
@@ -325,7 +325,7 @@ func jsonMarshal(v any) []byte {
 	return bs
 }
 
-func unmarshalBook(bs []byte) models.Book {
+func unmarshalModelsBook(bs []byte) models.Book {
 	var v models.Book
 	json.Unmarshal(bs, &v)
 	return v
