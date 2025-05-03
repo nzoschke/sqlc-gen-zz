@@ -21,6 +21,10 @@ var (
 	pl        = pluralize.NewClient()
 )
 
+func init() {
+	strcase.ConfigureAcronym("id", "ID")
+}
+
 type Options struct {
 	Overrides []Override `json:"overrides"`
 }

@@ -33,7 +33,7 @@ func TestCRUD(t *testing.T) {
 	a.Equal(&c.ContactCreateOut{
 		Blob:      []byte("b"),
 		CreatedAt: c1.CreatedAt,
-		Id:        1,
+		ID:        1,
 		Info: models.Info{
 			Age: 21,
 		},
@@ -49,7 +49,7 @@ func TestCRUD(t *testing.T) {
 	at := time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC)
 	err = c.ContactUpdate(conn, c.ContactUpdateIn{
 		CreatedAt: at,
-		Id:        1,
+		ID:        1,
 		Name:      "new",
 	})
 	a.NoError(err)
@@ -60,7 +60,7 @@ func TestCRUD(t *testing.T) {
 	a.Equal(&c.ContactReadOut{
 		Blob:      []byte("b"),
 		CreatedAt: at,
-		Id:        1,
+		ID:        1,
 		Info: models.Info{
 			Age: 21,
 		},
@@ -80,7 +80,7 @@ func TestCRUD(t *testing.T) {
 		{
 			Blob:      []byte("b"),
 			CreatedAt: at,
-			Id:        1,
+			ID:        1,
 			Info: models.Info{
 				Age: 21,
 			},
@@ -89,7 +89,7 @@ func TestCRUD(t *testing.T) {
 		{
 			Blob:      []byte("b"),
 			CreatedAt: c2.CreatedAt,
-			Id:        2,
+			ID:        2,
 			Info:      models.Info{},
 			Name:      "name",
 		},
@@ -134,7 +134,7 @@ func TestJSONB(t *testing.T) {
 		Json:      []byte("{}"),
 		Blob:      c1.Blob,
 		CreatedAt: c1.CreatedAt,
-		Id:        1,
+		ID:        1,
 		Info:      models.Info{},
 		Name:      "name",
 	}, c1)

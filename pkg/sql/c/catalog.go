@@ -11,7 +11,7 @@ import (
 type Contact struct {
 	Blob      []byte      `json:"blob"`
 	CreatedAt time.Time   `json:"created_at"`
-	Id        int64       `json:"id"`
+	ID        int64       `json:"id"`
 	Info      models.Info `json:"info"`
 	Name      string      `json:"name"`
 }

@@ -21,7 +21,7 @@ type ContactCreateIn struct {
 type ContactCreateOut struct {
 	Blob      []byte      `json:"blob"`
 	CreatedAt time.Time   `json:"created_at"`
-	Id        int64       `json:"id"`
+	ID        int64       `json:"id"`
 	Info      models.Info `json:"info"`
 	Name      string      `json:"name"`
 }
@@ -50,7 +50,7 @@ RETURNING
 	out := ContactCreateOut{}
 	out.Blob = []byte(stmt.ColumnText(0))
 	out.CreatedAt = timeParse(stmt.ColumnText(1))
-	out.Id = stmt.ColumnInt64(2)
+	out.ID = stmt.ColumnInt64(2)
 	out.Info = jsonUnmarshalModelsInfo([]byte(stmt.ColumnText(3)))
 	out.Name = stmt.ColumnText(4)
 
@@ -61,7 +61,7 @@ RETURNING
 type ContactReadOut struct {
 	Blob      []byte      `json:"blob"`
 	CreatedAt time.Time   `json:"created_at"`
-	Id        int64       `json:"id"`
+	ID        int64       `json:"id"`
 	Info      models.Info `json:"info"`
 	Name      string      `json:"name"`
 }
@@ -90,7 +90,7 @@ LIMIT
 	out := ContactReadOut{}
 	out.Blob = []byte(stmt.ColumnText(0))
 	out.CreatedAt = timeParse(stmt.ColumnText(1))
-	out.Id = stmt.ColumnInt64(2)
+	out.ID = stmt.ColumnInt64(2)
 	out.Info = jsonUnmarshalModelsInfo([]byte(stmt.ColumnText(3)))
 	out.Name = stmt.ColumnText(4)
 
@@ -126,7 +126,7 @@ type ContactListOut []ContactListRow
 type ContactListRow struct {
 	Blob      []byte      `json:"blob"`
 	CreatedAt time.Time   `json:"created_at"`
-	Id        int64       `json:"id"`
+	ID        int64       `json:"id"`
 	Info      models.Info `json:"info"`
 	Name      string      `json:"name"`
 }
@@ -155,7 +155,7 @@ LIMIT
 		row := ContactListRow{}
 		row.Blob = []byte(stmt.ColumnText(0))
 		row.CreatedAt = timeParse(stmt.ColumnText(1))
-		row.Id = stmt.ColumnInt64(2)
+		row.ID = stmt.ColumnInt64(2)
 		row.Info = jsonUnmarshalModelsInfo([]byte(stmt.ColumnText(3)))
 		row.Name = stmt.ColumnText(4)
 
@@ -197,7 +197,7 @@ LIMIT
 type ContactUpdateIn struct {
 	CreatedAt time.Time `json:"created_at"`
 	Name      string    `json:"name"`
-	Id        int64     `json:"id"`
+	ID        int64     `json:"id"`
 }
 
 func ContactUpdate(tx *sqlite.Conn, in ContactUpdateIn) error {
@@ -212,7 +212,7 @@ WHERE
 
 	stmt.BindText(1, in.CreatedAt.Format("2006-01-02 15:04:05"))
 	stmt.BindText(2, in.Name)
-	stmt.BindInt64(3, in.Id)
+	stmt.BindInt64(3, in.ID)
 
 	_, err := stmt.Step()
 	if err != nil {
@@ -262,7 +262,7 @@ type ContactCreateJSONBOut struct {
 	Json      []byte      `json:"json"`
 	Blob      []byte      `json:"blob"`
 	CreatedAt time.Time   `json:"created_at"`
-	Id        int64       `json:"id"`
+	ID        int64       `json:"id"`
 	Info      models.Info `json:"info"`
 	Name      string      `json:"name"`
 }
@@ -293,7 +293,7 @@ RETURNING
 	out.Json = []byte(stmt.ColumnText(0))
 	out.Blob = []byte(stmt.ColumnText(1))
 	out.CreatedAt = timeParse(stmt.ColumnText(2))
-	out.Id = stmt.ColumnInt64(3)
+	out.ID = stmt.ColumnInt64(3)
 	out.Info = jsonUnmarshalModelsInfo([]byte(stmt.ColumnText(4)))
 	out.Name = stmt.ColumnText(5)
 
