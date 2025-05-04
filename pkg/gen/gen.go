@@ -187,7 +187,7 @@ func bindval(ps []*plugin.Parameter, i int32) string {
 
 func dbtype(t string) string {
 	switch strings.ToLower(t) {
-	case "integer":
+	case "int", "integer":
 		return "Int64"
 	case "real":
 		return "Float"
@@ -222,7 +222,7 @@ func gotype(c *plugin.Column) string {
 
 	// https://sqlite.org/datatype3.html#affinity_name_examples
 	switch strings.ToLower(c.Type.Name) {
-	case "integer":
+	case "int", "integer":
 		return "int64"
 	case "real":
 		return "float64"
